@@ -51,14 +51,8 @@ func main() {
 	run := true
 	if run {
 
-		opts := append(chromedp.DefaultExecAllocatorOptions[:],
-			chromedp.Flag("headless", true),
-		)
-
-		allocCtx, _ := chromedp.NewExecAllocator(context.Background(), opts...)
-
 		// create context
-		ctx, cancel := chromedp.NewContext(allocCtx)
+		ctx, cancel := chromedp.NewContext(context.Background())
 		defer cancel()
 
 		// run task list
