@@ -39,7 +39,11 @@ func SendSignup(email, name, username, apiKey, host string) {
 	if err != nil {
 		log.Println(err)
 	} else {
-		fmt.Println(response.StatusCode)
+		if response.StatusCode == 202 {
+			fmt.Println("Email sent:", response.StatusCode)
+		} else {
+			fmt.Println(response.StatusCode)
+		}
 	}
 }
 
@@ -73,6 +77,10 @@ func SendSuccess(email, name, username, apiKey, host string) {
 	if err != nil {
 		log.Println(err)
 	} else {
-		fmt.Println(response.StatusCode)
+		if response.StatusCode == 202 {
+			fmt.Println("Email sent: ", response.StatusCode)
+		} else {
+			fmt.Println(response.StatusCode)
+		}
 	}
 }
