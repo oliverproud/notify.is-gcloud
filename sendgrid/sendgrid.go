@@ -9,34 +9,6 @@ import (
 	sendgrid "github.com/sendgrid/sendgrid-go"
 )
 
-// Send sends an email to specified user via SendGrid
-// func Send(ptrEmail, ptrName, ptrUsername string) {
-//
-// 	email := string(ptrEmail)
-// 	name := string(ptrName)
-// 	username := string(ptrUsername)
-//
-// 	fmt.Println(email)
-// 	fmt.Println(name)
-// 	fmt.Println(username)
-//
-// 	from := mail.NewEmail("Notify.is", "oliver@oliverproud.com")
-// 	subject := "Test email using SendGrid Go API"
-// 	to := mail.NewEmail(name, email)
-// 	plainTextContent := "and easy to do anywhere, even with Go"
-// 	htmlContent := "<strong>and easy to do anywhere, even with Go</strong>"
-// 	message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
-// 	client := sendgrid.NewSendClient(os.Getenv("SENDGRID_API_KEY"))
-// 	response, err := client.Send(message)
-// 	if err != nil {
-// 		log.Println(err)
-// 	} else {
-// 		fmt.Println(response.StatusCode)
-// 		fmt.Println(response.Body)
-// 		fmt.Println(response.Headers)
-// 	}
-// }
-
 // SendSignup will send the dynamic transactional template when a user signs up
 func SendSignup(email, name, username, apiKey, host string) {
 	request := sendgrid.GetRequest(apiKey, "/v3/mail/send", host)
