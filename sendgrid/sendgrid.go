@@ -15,7 +15,7 @@ func SendSignup(email, name, username, apiKey, host string) {
 	request.Method = "POST"
 	body := fmt.Sprintf(`{
 	 "from":{
-			"email":"oliver@oliverproud.com"
+			"email":"support@notify.is"
 	 },
 	 "personalizations":[
 			{
@@ -49,7 +49,7 @@ func SendSuccess(email, name, username, apiKey, host string) {
 	request.Method = "POST"
 	body := fmt.Sprintf(`{
 	 "from":{
-			"email":"oliver@oliverproud.com"
+			"email":"support@notify.is"
 	 },
 	 "personalizations":[
 			{
