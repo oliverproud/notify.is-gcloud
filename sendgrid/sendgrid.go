@@ -1,4 +1,4 @@
-// Package sendgrid is using SendGrid's Go Library
+// Package sendgrid sends Dynamic Template emails using SendGrid's Go Library
 // https://github.com/sendgrid/sendgrid-go
 package sendgrid
 
@@ -40,8 +40,6 @@ func SendSignup(email, name, username, apiKey, host string) {
 		log.Println(err)
 	} else {
 		fmt.Println(response.StatusCode)
-		// fmt.Println(response.Body)
-		// fmt.Println(response.Headers)
 	}
 }
 
@@ -76,21 +74,5 @@ func SendSuccess(email, name, username, apiKey, host string) {
 		log.Println(err)
 	} else {
 		fmt.Println(response.StatusCode)
-		// fmt.Println(response.Body)
-		// fmt.Println(response.Headers)
 	}
 }
-
-//
-// func main() {
-//
-// 	name := "Oliver"
-// 	email := "owproud@gmail.com"
-// 	username := "oliverproud"
-//
-// 	apiKey := os.Getenv("SENDGRID_API_KEY")
-// 	host := "https://api.sendgrid.com"
-//
-// 	SendSignup(email, name, username, apiKey, host)
-// 	SendSuccess(email, name, username, apiKey, host)
-// }
