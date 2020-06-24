@@ -11,11 +11,11 @@ import (
 	"os"
 	"strings"
 	"time"
-	"username-check/sendgrid"
 
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/chromedp"
+	"notify.is-go/sendgrid"
 )
 
 // XHRResponse handles the XHR JSON data coming in from Instagram
