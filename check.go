@@ -92,9 +92,6 @@ func submit(ctx context.Context, urlstr, selector, email, name, username, apiKey
 					} else {
 						fmt.Println("Username is available")
 						available = true
-					}
-
-					if available == true {
 						sendgrid.SendSuccess(email, name, username, apiKey, host)
 					}
 				}
