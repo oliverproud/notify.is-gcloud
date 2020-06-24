@@ -78,7 +78,7 @@ func SendSuccess(email, name, username, apiKey, host string) {
 		log.Println(err)
 	} else {
 		if response.StatusCode == 202 {
-			fmt.Println("Email sent: ", response.StatusCode)
+			fmt.Println("Email sent:", response.StatusCode)
 		} else {
 			fmt.Println(response.StatusCode)
 		}
