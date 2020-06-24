@@ -4,83 +4,73 @@ package sendgrid
 
 import (
 	"fmt"
-	"log"
+	"os"
 
 	sendgrid "github.com/sendgrid/sendgrid-go"
+	"github.com/sendgrid/sendgrid-go/helpers/mail"
 )
 
-// SendSignup will send the dynamic transactional template when a user signs up
-func SendSignup(email, name, username, apiKey, host string) {
-	request := sendgrid.GetRequest(apiKey, "/v3/mail/send", host)
-	request.Method = "POST"
-	body := fmt.Sprintf(`{
-	 "from":{
-			"email":"support@notify.is"
-	 },
-	 "personalizations":[
-			{
-				 "to":[
-						{
-							 "email":"%s"
-						}
-				 ],
-				 "dynamic_template_data":{
-						"first_name":"%s",
-						"username":"%s"
+func signupEmail(email, name, username string) []byte {
+	m := mail.NewV3Mail()
 
-					}
-			}
-	 ],
-	 	"template_id":"d-0449de6d2d8c431a9adb9f079bce3cc7"
-	 }`, email, name, username)
-	request.Body = []byte(body)
+	fromName := "Notify Support"
+	fromAddress := "support@notify.is"
+	e := mail.NewEmail(fromName, fromAddress)
+	m.SetFrom(e)
 
-	response, err := sendgrid.API(request)
-	if err != nil {
-		log.Println(err)
-	} else {
-		if response.StatusCode == 202 {
-			fmt.Println("Email sent:", response.StatusCode)
-		} else {
-			fmt.Println(response.StatusCode)
-		}
+	m.SetTemplateID("d-0449de6d2d8c431a9adb9f079bce3cc7")
+
+	p := mail.NewPersonalization()
+	tos := []*mail.Email{
+		mail.NewEmail(name, email),
 	}
+	p.AddTos(tos...)
+
+	p.SetDynamicTemplateData("first_name", name)
+	p.SetDynamicTemplateData("username", username)
+
+	m.AddPersonalizations(p)
+	return mail.GetRequestBody(m)
 }
 
-// SendSuccess will send a user an email when their username becomes available
-func SendSuccess(email, name, username, apiKey, host string) {
-	request := sendgrid.GetRequest(apiKey, "/v3/mail/send", host)
+func successEmail(email, name, username string) []byte {
+	m := mail.NewV3Mail()
+
+	fromName := "Notify Support"
+	fromAddress := "support@notify.is"
+	e := mail.NewEmail(fromName, fromAddress)
+	m.SetFrom(e)
+
+	m.SetTemplateID("d-8d0bb30d08564ee39fe261040db6f9c3")
+
+	p := mail.NewPersonalization()
+	tos := []*mail.Email{
+		mail.NewEmail(name, email),
+	}
+	p.AddTos(tos...)
+
+	p.SetDynamicTemplateData("first_name", name)
+	p.SetDynamicTemplateData("username", username)
+
+	m.AddPersonalizations(p)
+	return mail.GetRequestBody(m)
+}
+
+// SendEmail sends a Dynamic Template email using SendGrid API
+func SendEmail(email, name, username, emailType string) {
+	request := sendgrid.GetRequest(os.Getenv("SENDGRID_API_KEY"), "/v3/mail/send", "https://api.sendgrid.com")
 	request.Method = "POST"
-	body := fmt.Sprintf(`{
-	 "from":{
-			"email":"support@notify.is"
-	 },
-	 "personalizations":[
-			{
-				 "to":[
-						{
-							 "email":"%s"
-						}
-				 ],
-				 "dynamic_template_data":{
-						"first_name":"%s",
-						"username":"%s"
-
-					}
-			}
-	 ],
-	 	"template_id":"d-8d0bb30d08564ee39fe261040db6f9c3"
-	 }`, email, name, username)
-	request.Body = []byte(body)
-
+	var Body []byte
+	if emailType == "success" {
+		Body = successEmail(email, name, username)
+	} else {
+		Body = signupEmail(email, name, username)
+	}
+	request.Body = Body
 	response, err := sendgrid.API(request)
 	if err != nil {
-		log.Println(err)
+		fmt.Println(err)
 	} else {
-		if response.StatusCode == 202 {
-			fmt.Println("Email sent:", response.StatusCode)
-		} else {
-			fmt.Println(response.StatusCode)
-		}
+		fmt.Println(response.StatusCode)
 	}
 }
