@@ -1,1 +1,5 @@
+# Env
 sendgrid.env
+
+# Misc
+.DS_Store
