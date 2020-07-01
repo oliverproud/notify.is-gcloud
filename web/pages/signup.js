@@ -3,7 +3,7 @@ import Link from 'next/link'
 import Layout from '../components/layout'
 
 import React, { useState } from "react"
-import { signupHandler } from "./services/signup"
+import { signupHandler } from "../services/signup"
 
 export default function Signup() {
 

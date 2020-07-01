@@ -4,7 +4,7 @@ import Layout from '../components/layout'
 import IntroHeader from '../components/introHeader'
 
 import React, { useState } from "react"
-import { deleteHandler } from "./services/delete"
+import { deleteHandler } from "../services/delete"
 
 export default function About() {
 
