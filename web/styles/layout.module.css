@@ -1,0 +1,11 @@
+.container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* pushes footer to bottom of page */
+.main {
+  display: flex;
+  flex: 1;
+}
