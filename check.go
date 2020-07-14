@@ -92,7 +92,7 @@ func submit(ctx context.Context, urlstr, selector, email, name, username, apiKey
 					} else {
 						fmt.Println("Username is available")
 						available = true
-						sendgrid.SendEmail(email, name, username, "signup")
+						sendgrid.SendEmail(email, name, username, "", "signup")
 					}
 				}
 			}()
