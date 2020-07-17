@@ -3,72 +3,94 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"log"
+	"time"
 
 	//Postgres driver
 	_ "github.com/lib/pq"
 )
 
-func main() {
-	// c := cron.New()
-	// c.AddFunc("@every 1s", func() { fmt.Println("Every second") })
-	// c.Start()
-	// fmt.Println(c.Entries())
-	//
-	// time.Sleep(10 * time.Second)
-	//
-	// c.Stop()
+type Args struct {
+	t   time.Time
+	lim int
+}
 
-	sqlStatement := `
-    SELECT * FROM users
-    WHERE new_user = TRUE;
-    `
+func main() {
+
+	sqlStatement := `SELECT id, first_name, email, username, timestamp FROM users WHERE EXTRACT(EPOCH FROM ($1 - timestamp)) > $2`
+
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=require", "34.71.218.171", 5432, "postgres",
 		"***REMOVED***", "notify")
+
 	db, err := sql.Open("postgres", psqlInfo)
 	if err != nil {
-		log.Printf("%v", err)
+		fmt.Printf("%v", err)
+		fmt.Println("Returning...")
+		return
 	}
 
-	rows, err := db.Query(sqlStatement)
+	args := new(Args)
+	args.t = time.Now()
+	args.lim = 43200 // 12 hours in seconds
+
+	rows, err := db.Query(sqlStatement, args.t, args.lim)
 	if err != nil {
 		fmt.Println(err)
+		fmt.Println("Returning...")
+		return
 	}
 
 	defer rows.Close()
 	for rows.Next() {
 
 		var id []uint8
-		var firstName, lastName, email, username string
-		var timeHr, timeMin float64
-		var newUser bool
+		var firstName, email, username string
+		var timestamp time.Time
 
-		err = rows.Scan(&id, &firstName, &lastName, &email, &username, &newUser, &timeHr, &timeMin)
+		err = rows.Scan(&id, &firstName, &email, &username,
+			&timestamp)
 		if err != nil {
-			// handle this error
 			fmt.Println(err)
+			fmt.Println("Returning...")
+			return
 		}
+
+		timeDiff := time.Since(timestamp)
+		fmt.Printf("\nTime difference: %v\n", timeDiff)
+
+		limit := time.Hour * 12
+
+		if timeDiff > limit {
+			fmt.Println("Time is greater than allowed")
+			fmt.Println()
+		} else {
+			fmt.Println("Time OK")
+			fmt.Println()
+		}
+
 		fmt.Println("ID:", string(id))
-		fmt.Println("Name:", firstName, lastName)
+		fmt.Println("Name:", firstName)
 		fmt.Println("Email:", email)
 		fmt.Println("Username:", username)
-		fmt.Println("New user:", newUser)
-		fmt.Printf("Time: %v:%v\n", timeHr, timeMin)
+		fmt.Printf("Timestamp: %v\n", timestamp)
 
 		updateStatement := `
     UPDATE users
-    SET new_user = FALSE
-    WHERE id = $1;
+    SET timestamp = $1
+    WHERE id = $2;
     `
 
-		res, err := db.Exec(updateStatement, string(id))
+		res, err := db.Exec(updateStatement, time.Now(), string(id))
 		if err != nil {
 			fmt.Println(err)
+			fmt.Println("Returning...")
+			return
 		}
 
 		numUpdated, err := res.RowsAffected()
 		if err != nil {
 			fmt.Println(err)
+			fmt.Println("Returning...")
+			return
 		}
 		fmt.Println("Number of records updated:", numUpdated)
 	}
@@ -76,6 +98,7 @@ func main() {
 	err = rows.Err()
 	if err != nil {
 		fmt.Println(err)
+		fmt.Println("Returning...")
+		return
 	}
-
 }
