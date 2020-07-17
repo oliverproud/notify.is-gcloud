@@ -1,7 +1,8 @@
 package main // client.go
 import (
 	"fmt"
-	"log"
+	"os"
+	"os/signal"
 
 	"github.com/hibiken/asynq"
 	"notify.is-go/tasks"
@@ -11,13 +12,18 @@ func main() {
 	r := asynq.RedisClientOpt{Addr: "localhost:6379"}
 	client := asynq.NewClient(r)
 
-	t1 := tasks.NewEmailDeliveryTask(42, "some:template:id")
+	t := tasks.NewEmailDeliveryTask(42, "some:template:id")
 
 	// Process the task immediately.
-	res, err := client.EnqueueAt("* * * * * *", t1)
+	res, err := client.Enqueue(t)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 	}
 	fmt.Printf("result: %+v\n", res)
+
+	// Wait for a signal to quit:
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, os.Interrupt, os.Kill)
+	<-signalChan
 
 }
