@@ -3,10 +3,13 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"os"
+	"os/signal"
 	"time"
 
 	//Postgres driver
 	_ "github.com/lib/pq"
+	"github.com/robfig/cron"
 )
 
 var id []uint8
@@ -71,51 +74,65 @@ func main() {
 	args.t = time.Now()
 	args.lim = 43200 // 12 hours in seconds
 
-	selectStatement := `SELECT id, first_name, email, username, timestamp FROM users WHERE EXTRACT(EPOCH FROM ($1 - timestamp)) > $2`
+	c := cron.New()
+	c.AddFunc("@every 1m", func() {
 
-	rows, err := selectUsers(db, args, selectStatement)
-	if err != nil {
-		fmt.Println(err)
-		fmt.Println("Returning")
-		return
-	}
+		fmt.Println("Starting check...")
 
-	defer rows.Close()
-	for rows.Next() {
+		selectStatement := `SELECT id, first_name, email, username, timestamp FROM users WHERE EXTRACT(EPOCH FROM ($1 - timestamp)) > $2`
 
-		err = rows.Scan(&id, &firstName, &email, &username, &timestamp)
+		rows, err := selectUsers(db, args, selectStatement)
+		if err != nil {
+			fmt.Println(err)
+			fmt.Println("Returning")
+			return
+		}
+
+		defer rows.Close()
+		for rows.Next() {
+
+			err = rows.Scan(&id, &firstName, &email, &username, &timestamp)
+			if err != nil {
+				fmt.Println(err)
+				fmt.Println("Returning...")
+				return
+			}
+
+			timeDiff(timestamp)
+
+			fmt.Println("ID:", string(id))
+			fmt.Println("Name:", firstName)
+			fmt.Println("Email:", email)
+			fmt.Println("Username:", username)
+			fmt.Printf("Timestamp: %v\n", timestamp)
+
+			updateStatement := `
+	    UPDATE users
+	    SET timestamp = $1
+	    WHERE id = $2;
+    	`
+			numUpdated, err := updateTimestamp(db, updateStatement, id)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			fmt.Println("Number of records updated:", numUpdated)
+		}
+
+		// get any error encountered during iteration
+		err = rows.Err()
 		if err != nil {
 			fmt.Println(err)
 			fmt.Println("Returning...")
 			return
 		}
+	})
 
-		timeDiff(timestamp)
+	c.Start()
 
-		fmt.Println("ID:", string(id))
-		fmt.Println("Name:", firstName)
-		fmt.Println("Email:", email)
-		fmt.Println("Username:", username)
-		fmt.Printf("Timestamp: %v\n", timestamp)
+	// Wait for a signal to quit:
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, os.Interrupt, os.Kill)
+	<-signalChan
 
-		updateStatement := `
-    UPDATE users
-    SET timestamp = $1
-    WHERE id = $2;
-    `
-		numUpdated, err := updateTimestamp(db, updateStatement, id)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		fmt.Println("Number of records updated:", numUpdated)
-	}
-
-	// get any error encountered during iteration
-	err = rows.Err()
-	if err != nil {
-		fmt.Println(err)
-		fmt.Println("Returning...")
-		return
-	}
 }
