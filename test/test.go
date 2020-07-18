@@ -16,11 +16,6 @@ var id []uint8
 var firstName, email, username string
 var timestamp time.Time
 
-type Args struct {
-	t   time.Time
-	lim int
-}
-
 func timeDiff(timestamp time.Time) {
 	timeDiff := time.Since(timestamp)
 	fmt.Printf("\nTime difference: %v\n", timeDiff)
@@ -36,9 +31,9 @@ func timeDiff(timestamp time.Time) {
 	}
 }
 
-func selectUsers(db *sql.DB, args *Args, selectStatement string) (*sql.Rows, error) {
+func selectUsers(db *sql.DB, selectStatement string) (*sql.Rows, error) {
 
-	rows, err := db.Query(selectStatement, args.t, args.lim)
+	rows, err := db.Query(selectStatement)
 	if err != nil {
 		return nil, err
 	}
@@ -70,21 +65,17 @@ func main() {
 		return
 	}
 
-	args := new(Args)
-	args.t = time.Now().UTC()
-	args.lim = 43200 // 12 hours in seconds
-
 	c := cron.New()
 	c.AddFunc("@every 1m", func() {
 
 		fmt.Println("Starting check...")
 
-		selectStatement := `SELECT id, first_name, email, username, timestamp FROM users WHERE EXTRACT(EPOCH FROM ($1 - timestamp)) > $2`
+		selectStatement := `SELECT id, first_name, email, username, timestamp FROM users WHERE EXTRACT(EPOCH FROM ((now() at time zone 'utc') - timestamp)) > 43200.0`
 
-		rows, err := selectUsers(db, args, selectStatement)
+		rows, err := selectUsers(db, selectStatement)
 		if err != nil {
 			fmt.Println(err)
-			fmt.Println("Returning")
+			fmt.Println("Returning...")
 			return
 		}
 
