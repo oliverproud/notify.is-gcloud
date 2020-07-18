@@ -1,14 +1,9 @@
-// Command submit is a chromedp example demonstrating how to fill out and
-// submit a form.
-package main
+package check
 
 import (
 	"context"
 	"encoding/json"
-	"flag"
 	"fmt"
-	"log"
-	"os"
 	"strings"
 	"time"
 
@@ -32,21 +27,19 @@ type XHRResponse struct {
 var parseXHR XHRResponse
 var available bool
 
-func main() {
+func RunCheck(email, name, username string) error {
 
-	// SendGrid API key
-	apiKey := os.Getenv("SENDGRID_API_KEY")
 	host := "https://api.sendgrid.com"
 
-	firstName := flag.String("name", "Oliver", "users first name")
-	email := flag.String("email", "owproud@gmail.com", "users email address")
-	username := flag.String("username", "oliverproud", "users desired username")
-
-	flag.Parse()
-
-	fmt.Println(*firstName)
-	fmt.Println(*email)
-	fmt.Println(*username)
+	// firstName := flag.String("name", "Oliver", "users first name")
+	// email := flag.String("email", "owproud@gmail.com", "users email address")
+	// username := flag.String("username", "oliverproud", "users desired username")
+	//
+	// flag.Parse()
+	//
+	// fmt.Println(*firstName)
+	// fmt.Println(*email)
+	// fmt.Println(*username)
 
 	run := true
 	if run {
@@ -56,15 +49,15 @@ func main() {
 		defer cancel()
 
 		// run task list
-		err := chromedp.Run(ctx, submit(ctx, `https://www.instagram.com/accounts/emailsignup/`, `//input[@name="username"]`, *email, *firstName, *username, apiKey, host))
+		err := chromedp.Run(ctx, submit(ctx, `https://www.instagram.com/accounts/emailsignup/`, `//input[@name="username"]`, email, name, username, host))
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
-
 	}
+	return nil
 }
 
-func submit(ctx context.Context, urlstr, selector, email, name, username, apiKey, host string) chromedp.Tasks {
+func submit(ctx context.Context, urlstr, selector, email, name, username, host string) chromedp.Tasks {
 
 	chromedp.ListenTarget(ctx, func(event interface{}) {
 		if event, ok := event.(*network.EventResponseReceived); ok {
@@ -88,11 +81,11 @@ func submit(ctx context.Context, urlstr, selector, email, name, username, apiKey
 					// Parse JSON data
 					json.Unmarshal([]byte(body), &parseXHR)
 					if parseXHR.Errors.Username != nil {
-						fmt.Println("Username is taken")
+						fmt.Printf("Username: %s is taken\n", username)
 					} else {
-						fmt.Println("Username is available")
+						fmt.Printf("Username: %s is available\n", username)
 						available = true
-						sendgrid.SendEmail(email, name, username, "", "signup")
+						sendgrid.SendEmail(email, name, username, "", "success")
 					}
 				}
 			}()
