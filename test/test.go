@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"os"
 	"os/signal"
 	"time"
@@ -10,6 +11,7 @@ import (
 	//Postgres driver
 	_ "github.com/lib/pq"
 	"github.com/robfig/cron"
+	"notify.is-go/check"
 )
 
 var id []uint8
@@ -68,7 +70,7 @@ func main() {
 	c := cron.New()
 	c.AddFunc("@every 1m", func() {
 
-		fmt.Println("Starting check...")
+		log.Println("Starting check...")
 
 		selectStatement := `SELECT id, first_name, email, username, timestamp FROM users WHERE EXTRACT(EPOCH FROM ((now() at time zone 'utc') - timestamp)) > 43200.0`
 
@@ -96,6 +98,13 @@ func main() {
 			fmt.Println("Email:", email)
 			fmt.Println("Username:", username)
 			fmt.Printf("Timestamp: %v\n", timestamp)
+
+			err = check.RunCheck(email, firstName, username)
+			if err != nil {
+				fmt.Println(err)
+				fmt.Println("Returning...")
+				return
+			}
 
 			updateStatement := `
 	    UPDATE users
