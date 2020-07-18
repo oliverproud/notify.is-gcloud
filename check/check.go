@@ -27,37 +27,26 @@ type XHRResponse struct {
 var parseXHR XHRResponse
 var available bool
 
-func RunCheck(email, name, username string) error {
+// RunCheck runs the headless browser than checks Instagram
+func RunCheck(email, name, username string) (bool, error) {
 
-	host := "https://api.sendgrid.com"
+	// create context
+	ctx, cancel := chromedp.NewContext(context.Background())
+	defer cancel()
 
-	// firstName := flag.String("name", "Oliver", "users first name")
-	// email := flag.String("email", "owproud@gmail.com", "users email address")
-	// username := flag.String("username", "oliverproud", "users desired username")
-	//
-	// flag.Parse()
-	//
-	// fmt.Println(*firstName)
-	// fmt.Println(*email)
-	// fmt.Println(*username)
-
-	run := true
-	if run {
-
-		// create context
-		ctx, cancel := chromedp.NewContext(context.Background())
-		defer cancel()
-
-		// run task list
-		err := chromedp.Run(ctx, submit(ctx, `https://www.instagram.com/accounts/emailsignup/`, `//input[@name="username"]`, email, name, username, host))
-		if err != nil {
-			return err
-		}
+	task, available, err := submit(ctx, `https://www.instagram.com/accounts/emailsignup/`, `//input[@name="username"]`, email, name, username)
+	if err != nil {
+		return available, err
 	}
-	return nil
+	// run task list
+	err = chromedp.Run(ctx, task)
+	if err != nil {
+		return available, err
+	}
+	return available, nil
 }
 
-func submit(ctx context.Context, urlstr, selector, email, name, username, host string) chromedp.Tasks {
+func submit(ctx context.Context, urlstr, selector, email, name, username string) (chromedp.Tasks, bool, error) {
 
 	chromedp.ListenTarget(ctx, func(event interface{}) {
 		if event, ok := event.(*network.EventResponseReceived); ok {
@@ -73,6 +62,7 @@ func submit(ctx context.Context, urlstr, selector, email, name, username, host s
 				body, err := rbp.Do(cdp.WithExecutor(ctx, c.Target))
 				if err != nil {
 					fmt.Println(err)
+					return
 				}
 
 				// Check XHR response body for correct data
@@ -100,5 +90,5 @@ func submit(ctx context.Context, urlstr, selector, email, name, username, host s
 		chromedp.SendKeys(selector, username),
 		chromedp.Click(`//*[@id="react-root"]/section/main/div/article/div/div[1]/div/form/div[7]/div/button`, chromedp.BySearch),
 		chromedp.Sleep(time.Second * 1),
-	}
+	}, available, nil
 }
