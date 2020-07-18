@@ -46,7 +46,7 @@ func selectUsers(db *sql.DB, args *Args, selectStatement string) (*sql.Rows, err
 }
 
 func updateTimestamp(db *sql.DB, updateStatement string, id []uint8) (int64, error) {
-	res, err := db.Exec(updateStatement, time.Now(), string(id))
+	res, err := db.Exec(updateStatement, string(id))
 	if err != nil {
 		return 0, err
 	}
@@ -71,7 +71,7 @@ func main() {
 	}
 
 	args := new(Args)
-	args.t = time.Now()
+	args.t = time.Now().UTC()
 	args.lim = 43200 // 12 hours in seconds
 
 	c := cron.New()
@@ -108,8 +108,8 @@ func main() {
 
 			updateStatement := `
 	    UPDATE users
-	    SET timestamp = $1
-	    WHERE id = $2;
+	    SET timestamp = (now() at time zone 'utc')
+	    WHERE id = $1;
     	`
 			numUpdated, err := updateTimestamp(db, updateStatement, id)
 			if err != nil {
