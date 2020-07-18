@@ -97,20 +97,29 @@ func main() {
 			fmt.Println("Name:", firstName)
 			fmt.Println("Email:", email)
 			fmt.Println("Username:", username)
-			fmt.Printf("Timestamp: %v\n", timestamp)
 
-			err = check.RunCheck(email, firstName, username)
+			available, err := check.RunCheck(email, firstName, username)
 			if err != nil {
 				fmt.Println(err)
 				fmt.Println("Returning...")
 				return
 			}
 
-			updateStatement := `
-	    UPDATE users
-	    SET timestamp = (now() at time zone 'utc')
-	    WHERE id = $1;
-    	`
+			var updateStatement string
+
+			if available {
+				updateStatement = `
+		    DELETE FROM users
+		    WHERE id = $1;
+	    	`
+			} else {
+				updateStatement = `
+		    UPDATE users
+		    SET timestamp = (now() at time zone 'utc')
+		    WHERE id = $1;
+	    	`
+			}
+
 			numUpdated, err := updateTimestamp(db, updateStatement, id)
 			if err != nil {
 				fmt.Println(err)
