@@ -98,7 +98,7 @@ func main() {
 			fmt.Println("Email:", email)
 			fmt.Println("Username:", username)
 
-			available, err := check.RunCheck(email, firstName, username)
+			err = check.RunCheck(email, firstName, username)
 			if err != nil {
 				fmt.Println(err)
 				fmt.Println("Returning...")
@@ -107,7 +107,8 @@ func main() {
 
 			var updateStatement string
 
-			if available {
+			if check.Available {
+				fmt.Println("Available in if:", check.Available)
 				updateStatement = `
 		    DELETE FROM users
 		    WHERE id = $1;
