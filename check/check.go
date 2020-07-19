@@ -91,6 +91,6 @@ func submit(ctx context.Context, urlstr, selector, email, name, username string)
 		chromedp.WaitVisible(selector),
 		chromedp.SendKeys(selector, username),
 		chromedp.Click(`//*[@id="react-root"]/section/main/div/article/div/div[1]/div/form/div[7]/div/button`, chromedp.BySearch),
-		chromedp.Sleep(time.Second * 1),
+		chromedp.Sleep(time.Second * 2),
 	}, nil
 }
