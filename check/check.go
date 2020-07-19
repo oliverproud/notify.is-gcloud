@@ -24,29 +24,30 @@ type XHRResponse struct {
 	} `json:"errors"`
 }
 
+// Available let's the main package know if a username is available
+var Available bool
 var parseXHR XHRResponse
-var available bool
 
 // RunCheck runs the headless browser than checks Instagram
-func RunCheck(email, name, username string) (bool, error) {
+func RunCheck(email, name, username string) error {
 
 	// create context
 	ctx, cancel := chromedp.NewContext(context.Background())
 	defer cancel()
 
-	task, available, err := submit(ctx, `https://www.instagram.com/accounts/emailsignup/`, `//input[@name="username"]`, email, name, username)
+	task, err := submit(ctx, `https://www.instagram.com/accounts/emailsignup/`, `//input[@name="username"]`, email, name, username)
 	if err != nil {
-		return available, err
+		return err
 	}
 	// run task list
 	err = chromedp.Run(ctx, task)
 	if err != nil {
-		return available, err
+		return err
 	}
-	return available, nil
+	return nil
 }
 
-func submit(ctx context.Context, urlstr, selector, email, name, username string) (chromedp.Tasks, bool, error) {
+func submit(ctx context.Context, urlstr, selector, email, name, username string) (chromedp.Tasks, error) {
 
 	chromedp.ListenTarget(ctx, func(event interface{}) {
 		if event, ok := event.(*network.EventResponseReceived); ok {
@@ -72,9 +73,10 @@ func submit(ctx context.Context, urlstr, selector, email, name, username string)
 					json.Unmarshal([]byte(body), &parseXHR)
 					if parseXHR.Errors.Username != nil {
 						fmt.Printf("Username: %s is taken\n", username)
+						Available = false
 					} else {
 						fmt.Printf("Username: %s is available\n", username)
-						available = true
+						Available = true
 						sendgrid.SendEmail(email, name, username, "", "success")
 					}
 				}
@@ -90,5 +92,5 @@ func submit(ctx context.Context, urlstr, selector, email, name, username string)
 		chromedp.SendKeys(selector, username),
 		chromedp.Click(`//*[@id="react-root"]/section/main/div/article/div/div[1]/div/form/div[7]/div/button`, chromedp.BySearch),
 		chromedp.Sleep(time.Second * 1),
-	}, available, nil
+	}, nil
 }
