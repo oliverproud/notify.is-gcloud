@@ -20,7 +20,7 @@ web/.next/
 /client
 /tasks
 /workers
-go.sum
+
 README.md
 /main
 /gocraft-work
