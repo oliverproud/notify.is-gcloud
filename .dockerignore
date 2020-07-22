@@ -1,0 +1,39 @@
+
+# dependencies
+web/node_modules
+/.pnp
+.pnp.js
+
+# testing
+/coverage
+/check-test
+
+# next.js
+web/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+/client
+/tasks
+/workers
+go.sum
+README.md
+/main
+/gocraft-work
+/database
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# local env files
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+sendgrid.env
