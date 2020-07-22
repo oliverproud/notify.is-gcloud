@@ -140,11 +140,18 @@ func runThis() {
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	log.Print("Notify.is: received a request")
 
-	runThis()
+	keys, ok := r.URL.Query()["auth"]
+	if !ok || len(keys[0]) < 1 || keys[0] != os.Getenv("SERVER_PASSWORD") {
+		fmt.Fprintf(w, "You are not authorised to access this page")
+	} else {
+		log.Print("Notify.is: received a request")
 
-	fmt.Fprintf(w, "Hello World!\n")
+		runThis()
+
+		fmt.Fprintf(w, "Ready to process requests.\n")
+	}
+
 }
 
 func main() {
