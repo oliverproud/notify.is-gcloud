@@ -69,10 +69,13 @@ func submit(ctx context.Context, urlstr, selector, email, name, username string)
 				// Check XHR response body for correct data
 				if strings.HasPrefix(string(body), `{"account_created"`) {
 
+					// Testing
+					//fmt.Println("BODY:", string(body))
+
 					// Parse JSON data
 					json.Unmarshal([]byte(body), &parseXHR)
 					if parseXHR.Errors.Username != nil {
-						fmt.Printf("Username: %s is taken\n", username)
+						fmt.Printf("Username: %s is NOT available\n", username)
 						Available = false
 					} else {
 						fmt.Printf("Username: %s is available\n", username)
