@@ -30,10 +30,9 @@ COPY --from=builder /app/server /server
 FROM chromedp/headless-shell:latest
 
 # Install dumb-init or tini
-RUN apt install dumb-init
-# or RUN apt install tini
+RUN apt install tini
 
-ENTRYPOINT ["/usr/bin/dumb-init", "--"]
+ENTRYPOINT ["/tini", "--"]
 
 # Run the web service on container startup.
 CMD ["/server"]
