@@ -29,10 +29,6 @@ COPY --from=builder /app/server /server
 
 FROM chromedp/headless-shell:latest
 
-RUN apk add --no-cache tini
-# Tini is now available at /sbin/tini
-ENTRYPOINT ["/sbin/tini", "--"]
-
 
 # Run the web service on container startup.
 CMD ["/server"]
