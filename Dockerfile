@@ -27,5 +27,13 @@ RUN apk add --no-cache ca-certificates
 # Copy the binary to the production image from the builder stage.
 COPY --from=builder /app/server /server
 
+FROM chromedp/headless-shell:latest
+
+# Install dumb-init or tini
+RUN apt install dumb-init
+# or RUN apt install tini
+
+ENTRYPOINT ["dumb-init", "--"]
+
 # Run the web service on container startup.
 CMD ["/server"]
