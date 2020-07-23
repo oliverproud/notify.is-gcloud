@@ -17,6 +17,11 @@ web/.next/
 
 # misc
 .DS_Store
+/main
+/client
+/workers
+/tasks
+/gocraft-work
 
 # debug
 npm-debug.log*
