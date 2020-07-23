@@ -55,16 +55,6 @@ func updateTimestamp(db *sql.DB, updateStatement string, id []uint8) (int64, err
 }
 
 func runThis() {
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=require", os.Getenv("DB_HOST"), 5432, "postgres",
-		os.Getenv("DB_PASSWORD"), "notify")
-
-	db, err := sql.Open("postgres", psqlInfo)
-	if err != nil {
-		fmt.Printf("%v", err)
-		fmt.Println("Returning...")
-		return
-	}
-
 	log.Println("Starting check...")
 
 	selectStatement := `SELECT id, first_name, email, username, timestamp FROM users WHERE EXTRACT(EPOCH FROM ((now() at time zone 'utc') - timestamp)) > 43200.0`
@@ -152,6 +142,25 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Ready to process requests.\n")
 	}
 
+}
+
+var db *sql.DB
+
+func init() {
+
+	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=require", os.Getenv("DB_HOST"), 5432, "postgres",
+		os.Getenv("DB_PASSWORD"), "notify")
+
+	var err error
+	db, err = sql.Open("postgres", psqlInfo)
+	if err != nil {
+		fmt.Printf("%v", err)
+		fmt.Println("Returning...")
+		return
+	}
+	if err = db.Ping(); err != nil {
+		log.Fatal(err)
+	}
 }
 
 func main() {
