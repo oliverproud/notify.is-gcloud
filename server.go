@@ -14,7 +14,7 @@ import (
 )
 
 var id []uint8
-var firstName, email, username string
+var firstName, email, username, updateStatement string
 var timestamp time.Time
 
 func timeDiff(timestamp time.Time) {
@@ -54,26 +54,21 @@ func updateTimestamp(db *sql.DB, updateStatement string, id []uint8) (int64, err
 	return numUpdated, nil
 }
 
-func runThis() {
+func runCheck() error {
 	log.Println("Starting check...")
 
 	selectStatement := `SELECT id, first_name, email, username, timestamp FROM users WHERE EXTRACT(EPOCH FROM ((now() at time zone 'utc') - timestamp)) > 43200.0`
 
 	rows, err := selectUsers(db, selectStatement)
 	if err != nil {
-		fmt.Println(err)
-		fmt.Println("Returning...")
-		return
+		return err
 	}
 
 	defer rows.Close()
 	for rows.Next() {
 
-		err = rows.Scan(&id, &firstName, &email, &username, &timestamp)
-		if err != nil {
-			fmt.Println(err)
-			fmt.Println("Returning...")
-			return
+		if err = rows.Scan(&id, &firstName, &email, &username, &timestamp); err != nil {
+			return err
 		}
 
 		timeDiff(timestamp)
@@ -83,21 +78,9 @@ func runThis() {
 		fmt.Println("Email:", email)
 		fmt.Println("Username:", username)
 
-		err = check.RunCheck(email, firstName, username)
-		if err != nil {
-			fmt.Println(err)
-			fmt.Println("Returning...")
-			return
+		if err = check.RunCheck(email, firstName, username); err != nil {
+			return err
 		}
-
-		var updateStatement string
-
-		// For testing
-		// updateStatement = `
-		// 	UPDATE users
-		// 	SET timestamp = (now() at time zone 'utc')
-		// 	WHERE id = $1;
-		// 	`
 
 		if check.Available {
 			updateStatement = `
@@ -114,19 +97,16 @@ func runThis() {
 
 		numUpdated, err := updateTimestamp(db, updateStatement, id)
 		if err != nil {
-			fmt.Println(err)
-			return
+			return err
 		}
 		fmt.Println("Number of records updated:", numUpdated)
 	}
 
 	// get any error encountered during iteration
-	err = rows.Err()
-	if err != nil {
-		fmt.Println(err)
-		fmt.Println("Returning...")
-		return
+	if err = rows.Err(); err != nil {
+		return err
 	}
+	return nil
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
@@ -137,11 +117,13 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		log.Print("Notify.is: received a request")
 
-		runThis()
-
+		if err := runCheck(); err != nil {
+			fmt.Println(err)
+			fmt.Println("Returning...")
+			return
+		}
 		fmt.Fprintf(w, "Ready to process requests.\n")
 	}
-
 }
 
 var db *sql.DB
