@@ -17,14 +17,14 @@ web/.next/
 
 # misc
 .DS_Store
+README.md
 /client
 /tasks
 /workers
-
-README.md
 /main
 /gocraft-work
 /database
+/logo
 
 # debug
 npm-debug.log*
