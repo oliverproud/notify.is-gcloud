@@ -159,11 +159,6 @@ func main() {
 
 	http.HandleFunc("/", handler)
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "***REMOVED***"
-	}
-
-	log.Printf("Notify.is: listening on port %s", port)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), nil))
+	log.Printf("Notify.is: listening on port %s", os.Getenv("PORT"))
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", os.Getenv("PORT")), nil))
 }
