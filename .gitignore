@@ -23,6 +23,7 @@ web/.next/
 /tasks
 /gocraft-work
 /logo
+/sendgrid-test
 
 # debug
 npm-debug.log*
