@@ -43,7 +43,7 @@ func runCheck() error {
 		fmt.Println("Email:", email)
 		fmt.Println("Username:", username)
 
-		if err = check.RunCheck(email, firstName, username); err != nil {
+		if err = check.RunHeadless(email, firstName, username); err != nil {
 			return err
 		}
 

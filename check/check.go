@@ -28,8 +28,8 @@ type XHRResponse struct {
 var Available bool
 var parseXHR XHRResponse
 
-// RunCheck runs the headless browser than checks Instagram
-func RunCheck(email, name, username string) error {
+// RunHeadless runs the headless browser than checks Instagram
+func RunHeadless(email, name, username string) error {
 
 	// create context
 	ctx, cancel := chromedp.NewContext(context.Background())
