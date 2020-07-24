@@ -22,6 +22,7 @@ web/.next/
 /workers
 /tasks
 /gocraft-work
+/logo
 
 # debug
 npm-debug.log*
