@@ -15,7 +15,7 @@ require (
 	github.com/mitchellh/mapstructure v1.3.2 // indirect
 	github.com/pelletier/go-toml v1.8.0 // indirect
 	github.com/robfig/cron v1.2.0
-	github.com/sendgrid/rest v2.6.0+incompatible // indirect
+	github.com/sendgrid/rest v2.6.0+incompatible
 	github.com/sendgrid/sendgrid-go v3.6.0+incompatible
 	github.com/spf13/afero v1.3.2 // indirect
 	github.com/spf13/cobra v1.0.0 // indirect
