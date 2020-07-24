@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"notify.is-go/check"
+	"notify.is-go/database"
+	"notify.is-go/timeDiff"
 	//Postgres driver
 	_ "github.com/lib/pq"
 )
@@ -17,49 +19,12 @@ var id []uint8
 var firstName, email, username, updateStatement string
 var timestamp time.Time
 
-func timeDiff(timestamp time.Time) {
-	timeDiff := time.Since(timestamp)
-	fmt.Printf("\nTime difference: %v\n", timeDiff)
-
-	limit := time.Hour * 12
-
-	if timeDiff > limit {
-		fmt.Println("Time is greater than allowed")
-		fmt.Println()
-	} else {
-		fmt.Println("Time OK")
-		fmt.Println()
-	}
-}
-
-func selectUsers(db *sql.DB, selectStatement string) (*sql.Rows, error) {
-
-	rows, err := db.Query(selectStatement)
-	if err != nil {
-		return nil, err
-	}
-	return rows, nil
-}
-
-func updateTimestamp(db *sql.DB, updateStatement string, id []uint8) (int64, error) {
-	res, err := db.Exec(updateStatement, string(id))
-	if err != nil {
-		return 0, err
-	}
-
-	numUpdated, err := res.RowsAffected()
-	if err != nil {
-		return 0, err
-	}
-	return numUpdated, nil
-}
-
 func runCheck() error {
 	log.Println("Starting check...")
 
 	selectStatement := `SELECT id, first_name, email, username, timestamp FROM users WHERE EXTRACT(EPOCH FROM ((now() at time zone 'utc') - timestamp)) > 43200.0`
 
-	rows, err := selectUsers(db, selectStatement)
+	rows, err := database.SelectRecords(db, selectStatement)
 	if err != nil {
 		return err
 	}
@@ -71,7 +36,7 @@ func runCheck() error {
 			return err
 		}
 
-		timeDiff(timestamp)
+		timeDiff.CalculateDiff(timestamp)
 
 		fmt.Println("ID:", string(id))
 		fmt.Println("Name:", firstName)
@@ -95,7 +60,7 @@ func runCheck() error {
 			`
 		}
 
-		numUpdated, err := updateTimestamp(db, updateStatement, id)
+		numUpdated, err := database.UpdateRecords(db, updateStatement, id)
 		if err != nil {
 			return err
 		}
@@ -130,8 +95,7 @@ var db *sql.DB
 
 func init() {
 
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=require", os.Getenv("DB_HOST"), 5432, "postgres",
-		os.Getenv("DB_PASSWORD"), "notify")
+	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=require", os.Getenv("DB_HOST"), 5432, "postgres", os.Getenv("DB_PASSWORD"), "notify")
 
 	var err error
 	db, err = sql.Open("postgres", psqlInfo)
