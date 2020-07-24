@@ -80,7 +80,12 @@ func submit(ctx context.Context, urlstr, selector, email, name, username string)
 					} else {
 						fmt.Printf("Username: %s is available\n", username)
 						Available = true
-						sendgrid.SendEmail(email, name, username, "", "success")
+						resp, err := sendgrid.SuccessEmail(email, name, username)
+						if err != nil {
+							fmt.Println(err)
+						} else {
+							fmt.Println("Sendgrid Response:", resp.StatusCode)
+						}
 					}
 				}
 			}()
