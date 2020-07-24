@@ -40,8 +40,7 @@ func RunHeadless(email, name, username string) error {
 		return err
 	}
 	// run task list
-	err = chromedp.Run(ctx, task)
-	if err != nil {
+	if err = chromedp.Run(ctx, task); err != nil {
 		return err
 	}
 	return nil
