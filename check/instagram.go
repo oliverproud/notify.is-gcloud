@@ -10,7 +10,6 @@ import (
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/chromedp"
-	"notify.is-go/sendgrid"
 )
 
 // XHRResponse handles the XHR JSON data coming in from Instagram
@@ -74,17 +73,11 @@ func submit(ctx context.Context, urlstr, selector, email, name, username string)
 					// Parse JSON data
 					json.Unmarshal([]byte(body), &parseXHR)
 					if parseXHR.Errors.Username != nil {
-						fmt.Printf("Username: %s is NOT available\n", username)
+						fmt.Printf("Instagram: username %s is NOT available\n", username)
 						Available = false
 					} else {
-						fmt.Printf("Username: %s is available\n", username)
+						fmt.Printf("Instagram: username %s is available\n", username)
 						Available = true
-						resp, err := sendgrid.SuccessEmail(email, name, username)
-						if err != nil {
-							fmt.Println(err)
-						} else {
-							fmt.Println("Sendgrid Response:", resp.StatusCode)
-						}
 					}
 				}
 			}()
