@@ -183,11 +183,6 @@ var db *sql.DB
 
 func init() {
 
-	***REMOVED***("SERVER_PASSWORD", "***REMOVED***")
-	***REMOVED***("DB_PASSWORD", "***REMOVED***")
-	***REMOVED***("DB_HOST", "***REMOVED***")
-	***REMOVED***("PORT", "***REMOVED***")
-
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=require", os.Getenv("DB_HOST"), 5432, "postgres", os.Getenv("DB_PASSWORD"), "notify")
 
 	var err error
