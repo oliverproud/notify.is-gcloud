@@ -10,19 +10,21 @@ import (
 
 	"notify.is-go/check"
 	"notify.is-go/database"
+	"notify.is-go/sendgrid"
 	"notify.is-go/timeDiff"
 	//Postgres driver
 	_ "github.com/lib/pq"
 )
 
 var id []uint8
-var firstName, email, username, updateStatement string
 var timestamp time.Time
+var instagram, twitter bool
+var firstName, email, username, updateStatement string
 
 func runCheck() error {
 	log.Println("Starting check...")
 
-	selectStatement := `SELECT id, first_name, email, username, timestamp FROM users WHERE EXTRACT(EPOCH FROM ((now() at time zone 'utc') - timestamp)) > 43200.0`
+	selectStatement := `SELECT id, first_name, email, username, instagram, twitter, timestamp FROM users WHERE EXTRACT(EPOCH FROM ((now() at time zone 'utc') - timestamp)) > 43200.0`
 
 	rows, err := database.SelectRecords(db, selectStatement)
 	if err != nil {
@@ -32,7 +34,14 @@ func runCheck() error {
 	defer rows.Close()
 	for rows.Next() {
 
-		if err = rows.Scan(&id, &firstName, &email, &username, &timestamp); err != nil {
+		// Reset update statement
+		updateStatement = `
+				UPDATE users
+				SET timestamp = (now() at time zone 'utc')
+				WHERE id = $1;
+				`
+
+		if err = rows.Scan(&id, &firstName, &email, &username, &instagram, &twitter, &timestamp); err != nil {
 			return err
 		}
 
@@ -42,24 +51,103 @@ func runCheck() error {
 		fmt.Println("Name:", firstName)
 		fmt.Println("Email:", email)
 		fmt.Println("Username:", username)
+		fmt.Println("Instagram:", instagram)
+		fmt.Println("Twitter:", twitter)
 
-		if err = check.RunHeadless(email, firstName, username); err != nil {
-			return err
+		if instagram && twitter {
+			fmt.Println("Run both Instagram and Twiter")
+			if err := check.RunHeadless(email, firstName, username); err != nil {
+				return err
+			}
+			if check.Available {
+				resp, err := sendgrid.SuccessEmailInstagram(email, firstName, username)
+				if err != nil {
+					fmt.Println(err)
+					return err
+				}
+				fmt.Println("Sendgrid Response:", resp.StatusCode)
+			}
+
+			available, err := check.TwitterAPI(username)
+			if err != nil {
+				return err
+			}
+
+			fmt.Println("Twitter response (Run both):", available)
+			// Update statement
+			// Send success email
+			if available {
+				resp, err := sendgrid.SuccessEmailTwitter(email, firstName, username)
+				if err != nil {
+					fmt.Println(err)
+					return err
+				}
+				fmt.Println("Sendgrid Response:", resp.StatusCode)
+			}
+			if check.Available && available {
+				updateStatement = `
+				UPDATE users
+				SET instagram = false, twitter = false, timestamp = (now() at time zone 'utc')
+				WHERE id = $1;
+				`
+			} else if check.Available {
+				updateStatement = `
+				UPDATE users
+				SET instagram = false, timestamp = (now() at time zone 'utc')
+				WHERE id = $1;
+				`
+			} else if available {
+				updateStatement = `
+				UPDATE users
+				SET twitter = false, timestamp = (now() at time zone 'utc')
+				WHERE id = $1;
+				`
+			}
+		} else if instagram {
+			fmt.Println("Only run Instagram")
+			if err := check.RunHeadless(email, firstName, username); err != nil {
+				return err
+			}
+			if check.Available {
+				resp, err := sendgrid.SuccessEmailInstagram(email, firstName, username)
+				if err != nil {
+					fmt.Println(err)
+					return err
+				}
+				fmt.Println("Sendgrid Response:", resp.StatusCode)
+
+				updateStatement = `
+				UPDATE users
+				SET instagram = false, timestamp = (now() at time zone 'utc')
+				WHERE id = $1;
+				`
+			}
+		} else if twitter {
+			fmt.Println("Only run Twitter")
+			available, err := check.TwitterAPI(username)
+			if err != nil {
+				return err
+			}
+
+			fmt.Println("Twitter response (Only Twitter):", available)
+			// Update statement
+			// Send success email
+			if available {
+				resp, err := sendgrid.SuccessEmailTwitter(email, firstName, username)
+				if err != nil {
+					fmt.Println(err)
+					return err
+				}
+				fmt.Println("Sendgrid Response:", resp.StatusCode)
+				updateStatement = `
+				UPDATE users
+				SET twitter = false, timestamp = (now() at time zone 'utc')
+				WHERE id = $1;
+				`
+			}
 		}
 
-		if check.Available {
-			updateStatement = `
-		  DELETE FROM users
-		  WHERE id = $1;
-			`
-		} else {
-			updateStatement = `
-		  UPDATE users
-		  SET timestamp = (now() at time zone 'utc')
-		  WHERE id = $1;
-			`
-		}
-
+		fmt.Println("UPDATE STATEMENT:", updateStatement)
 		numUpdated, err := database.UpdateRecords(db, updateStatement, id)
 		if err != nil {
 			return err
@@ -94,6 +182,11 @@ func handler(w http.ResponseWriter, r *http.Request) {
 var db *sql.DB
 
 func init() {
+
+	***REMOVED***("SERVER_PASSWORD", "***REMOVED***")
+	***REMOVED***("DB_PASSWORD", "***REMOVED***")
+	***REMOVED***("DB_HOST", "***REMOVED***")
+	***REMOVED***("PORT", "***REMOVED***")
 
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=require", os.Getenv("DB_HOST"), 5432, "postgres", os.Getenv("DB_PASSWORD"), "notify")
 
