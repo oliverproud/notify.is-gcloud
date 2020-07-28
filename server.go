@@ -13,6 +13,8 @@ import (
 	"notify.is-go/sendgrid"
 	"notify.is-go/timeDiff"
 	//Postgres driver
+	"github.com/getsentry/sentry-go"
+	sentryhttp "github.com/getsentry/sentry-go/http"
 	_ "github.com/lib/pq"
 )
 
@@ -164,6 +166,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		log.Print("Notify.is: received a request")
 
 		if err := runCheck(); err != nil {
+			sentry.CaptureException(err)
 			fmt.Println(err)
 			fmt.Println("Returning...")
 			return
@@ -177,7 +180,7 @@ var db *sql.DB
 func init() {
 
 	// Setenv here
-	
+
 	const (
 		port   = 5432
 		user   = "postgres"
@@ -192,20 +195,38 @@ func init() {
 	var err error
 	db, err = sql.Open("postgres", psqlInfo)
 	if err != nil {
+		sentry.CaptureException(err)
 		fmt.Printf("%v", err)
 		fmt.Println("Returning...")
 		return
 	}
 	if err = db.Ping(); err != nil {
+		sentry.CaptureException(err)
 		log.Fatal(err)
 	}
 }
 
 func main() {
+
+	// To initialize Sentry's handler, you need to initialize Sentry itself beforehand
+	if err := sentry.Init(sentry.ClientOptions{
+		Dsn: os.Getenv("SENTRY_DSN"),
+	}); err != nil {
+		fmt.Printf("Sentry initialization failed: %v\n", err)
+	}
+
+	// Flush buffered events before the program terminates.
+	// Set the timeout to the maximum duration the program can afford to wait.
+	defer sentry.Flush(2 * time.Second)
+
+	// Create an instance of sentryhttp
+	sentryHandler := sentryhttp.New(sentryhttp.Options{})
+
 	log.Print("Notify.is: starting server...")
 
-	http.HandleFunc("/", handler)
+	http.HandleFunc("/", sentryHandler.HandleFunc(handler))
 
 	log.Printf("Notify.is: listening on port %s", os.Getenv("PORT"))
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", os.Getenv("PORT")), nil))
+
 }
