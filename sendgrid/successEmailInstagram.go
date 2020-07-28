@@ -1,6 +1,7 @@
 package sendgrid
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/sendgrid/rest"
@@ -36,5 +37,10 @@ func SuccessEmailInstagram(email, name, username string) (*rest.Response, error)
 	if err != nil {
 		return nil, err
 	}
+
+	if response.StatusCode != 202 {
+		return nil, fmt.Errorf("Sendgrid encountered an error: %d", response.StatusCode)
+	}
+
 	return response, nil
 }
