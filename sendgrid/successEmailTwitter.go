@@ -31,6 +31,7 @@ func SuccessEmailTwitter(email, name, username string) (*rest.Response, error) {
 	Body := mail.GetRequestBody(m)
 
 	request := sendgrid.GetRequest(os.Getenv("SENDGRID_API_KEY"), "/v3/mail/send", "https://api.sendgrid.com")
+	request.Method = "POST"
 	request.Body = Body
 	response, err := sendgrid.API(request)
 	if err != nil {
