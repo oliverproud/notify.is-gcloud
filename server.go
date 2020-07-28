@@ -72,7 +72,6 @@ func runCheck() error {
 				return err
 			}
 
-			fmt.Println("Twitter response (Run both):", available)
 			// Update statement
 			// Send success email
 			if available {
@@ -126,7 +125,6 @@ func runCheck() error {
 				return err
 			}
 
-			fmt.Println("Twitter response (Only Twitter):", available)
 			// Update statement
 			// Send success email
 			if available {
@@ -143,7 +141,6 @@ func runCheck() error {
 			}
 		}
 
-		fmt.Println("UPDATE STATEMENT:", updateStatement)
 		numUpdated, err := database.UpdateRecords(db, updateStatement, id)
 		if err != nil {
 			return err
