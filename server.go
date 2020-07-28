@@ -34,7 +34,7 @@ func runCheck() error {
 	defer rows.Close()
 	for rows.Next() {
 
-		// Reset update statement
+		// Default update statement
 		updateStatement = `
 				UPDATE users
 				SET timestamp = (now() at time zone 'utc')
@@ -62,7 +62,6 @@ func runCheck() error {
 			if check.Available {
 				resp, err := sendgrid.SuccessEmailInstagram(email, firstName, username)
 				if err != nil {
-					fmt.Println(err)
 					return err
 				}
 				fmt.Println("Sendgrid Response:", resp.StatusCode)
@@ -79,7 +78,6 @@ func runCheck() error {
 			if available {
 				resp, err := sendgrid.SuccessEmailTwitter(email, firstName, username)
 				if err != nil {
-					fmt.Println(err)
 					return err
 				}
 				fmt.Println("Sendgrid Response:", resp.StatusCode)
@@ -111,7 +109,6 @@ func runCheck() error {
 			if check.Available {
 				resp, err := sendgrid.SuccessEmailInstagram(email, firstName, username)
 				if err != nil {
-					fmt.Println(err)
 					return err
 				}
 				fmt.Println("Sendgrid Response:", resp.StatusCode)
@@ -135,7 +132,6 @@ func runCheck() error {
 			if available {
 				resp, err := sendgrid.SuccessEmailTwitter(email, firstName, username)
 				if err != nil {
-					fmt.Println(err)
 					return err
 				}
 				fmt.Println("Sendgrid Response:", resp.StatusCode)
