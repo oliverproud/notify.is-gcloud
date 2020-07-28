@@ -1,6 +1,7 @@
 package sendgrid
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/sendgrid/rest"
@@ -41,5 +42,13 @@ func SignupEmail(email, name, username string) (*rest.Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	return response, nil
+
+	switch response.StatusCode {
+	case 200:
+		return response, nil
+	case 202:
+		return response, nil
+	default:
+		return nil, fmt.Errorf("Sendgrid encountered an error: %d", response.StatusCode)
+	}
 }
