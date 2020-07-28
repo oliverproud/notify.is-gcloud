@@ -176,7 +176,18 @@ var db *sql.DB
 
 func init() {
 
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=require", os.Getenv("DB_HOST"), 5432, "postgres", os.Getenv("DB_PASSWORD"), "notify")
+	// Setenv here
+	
+	const (
+		port   = 5432
+		user   = "postgres"
+		dbName = "notify"
+	)
+
+	var host = os.Getenv("DB_HOST")
+	var password = os.Getenv("DB_PASSWORD")
+
+	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=require", host, port, user, password, dbName)
 
 	var err error
 	db, err = sql.Open("postgres", psqlInfo)
