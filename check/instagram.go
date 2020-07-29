@@ -23,12 +23,12 @@ type XHRResponse struct {
 	} `json:"errors"`
 }
 
-// Available let's the main package know if a username is available
-var Available bool
+// InstagramAvailable let's the main package know if a username is available
+var InstagramAvailable bool
 var parseXHR XHRResponse
 
-// RunHeadless runs the headless browser than checks Instagram
-func RunHeadless(email, name, username string) error {
+// Instagram runs the headless browser than checks Instagram
+func Instagram(email, name, username string) error {
 
 	// create context
 	ctx, cancel := chromedp.NewContext(context.Background())
@@ -74,10 +74,10 @@ func submit(ctx context.Context, urlstr, selector, email, name, username string)
 					json.Unmarshal([]byte(body), &parseXHR)
 					if parseXHR.Errors.Username != nil {
 						fmt.Printf("Instagram: username %s is NOT available\n", username)
-						Available = false
+						InstagramAvailable = false
 					} else {
 						fmt.Printf("Instagram: username %s is available\n", username)
-						Available = true
+						InstagramAvailable = true
 					}
 				}
 			}()

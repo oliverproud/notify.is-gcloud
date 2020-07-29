@@ -10,8 +10,8 @@ import (
 
 var available bool
 
-// TwitterAPI uses a Golang Twitter API to make requests
-func TwitterAPI(username string) (bool, error) {
+// Twitter uses a Go Twitter API to make requests
+func Twitter(username string) (bool, error) {
 	config := oauth1.NewConfig(os.Getenv("CONSUMER_KEY"), os.Getenv("CONSUMER_SECRET"))
 	token := oauth1.NewToken(os.Getenv("TOKEN"), os.Getenv("TOKEN_SECRET"))
 	httpClient := config.Client(oauth1.NoContext, token)
