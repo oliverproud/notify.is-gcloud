@@ -105,13 +105,6 @@ func runCheck() error {
 				return err
 			}
 		}
-
-		// Default update statement if usernames are not available
-		numUpdated, err := database.UpdateRecords(db, statements.DefaultUpdateStatement, id)
-		if err != nil {
-			return err
-		}
-		fmt.Println("Number of records updated:", numUpdated)
 	}
 
 	// Get any error encountered during iteration

@@ -1,13 +1,6 @@
 package statements
 
 const (
-	// DefaultUpdateStatement updates a records timestamp if nothing else is updated
-	DefaultUpdateStatement = `
-  UPDATE users
-  SET timestamp = (now() at time zone 'utc')
-  WHERE id = $1;
-  `
-
 	// InstagramUpdateStatement updates the instagram column and timestamp if a username is available
 	InstagramUpdateStatement = `
   UPDATE users
