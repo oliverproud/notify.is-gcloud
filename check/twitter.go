@@ -3,6 +3,7 @@ package check
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/dghubble/go-twitter/twitter"
 	"github.com/dghubble/oauth1"
@@ -24,10 +25,11 @@ func Twitter(username string) (bool, error) {
 	// Get Twitter user
 	user, _, err := client.Users.Show(showParams)
 	if err != nil {
-		if err.Error() == "twitter: 50 User not found." {
+		switch {
+		case strings.Contains(err.Error(), "twitter: 50 User not found."):
 			available = true
 			fmt.Printf("Twitter: username %s available\n", username)
-		} else {
+		default:
 			return available, err
 		}
 	}
