@@ -21,7 +21,7 @@ import (
 
 var id []uint8
 var timestamp time.Time
-var instagram, twitter bool
+var instagram, twitter, github bool
 var firstName, email, username, updateStatement string
 
 func runInstagramCheck(email, firstName, username string) error {
@@ -64,6 +64,28 @@ func runTwitterCheck(email, firstName, username string) error {
 	return nil
 }
 
+func runGithubCheck(email, firstName, username string) error {
+
+	githubAvailable, err := check.Github(username)
+	if err != nil {
+		return err
+	}
+
+	if githubAvailable {
+		resp, err := sendgrid.SuccessEmailGithub(email, firstName, username)
+		if err != nil {
+			return err
+		}
+		numUpdated, err := database.UpdateRecords(db, statements.GithubUpdateStatement, id)
+		if err != nil {
+			return err
+		}
+		fmt.Println("Sendgrid Response:", resp.StatusCode)
+		fmt.Println("Number of records updated:", numUpdated)
+	}
+	return nil
+}
+
 func runCheck() error {
 	log.Println("Starting check...")
 
@@ -77,31 +99,25 @@ func runCheck() error {
 	defer rows.Close()
 	for rows.Next() {
 
-		if err = rows.Scan(&id, &firstName, &email, &username, &instagram, &twitter, &timestamp); err != nil {
+		if err = rows.Scan(&id, &firstName, &email, &username, &instagram, &twitter, &github, &timestamp); err != nil {
 			return err
 		}
 
 		timeDiff.CalculateDiff(timestamp)
 		fmt.Println("Username:", username)
 
-		if instagram && twitter {
-			fmt.Println("Run both Instagram and Twiter")
-			// Instagram check
+		if instagram {
 			if err := runInstagramCheck(email, firstName, username); err != nil {
 				return err
 			}
-			// Twitter check
+		}
+		if twitter {
 			if err := runTwitterCheck(email, firstName, username); err != nil {
 				return err
 			}
-		} else if instagram {
-			fmt.Println("Run Instagram")
-			if err := runInstagramCheck(email, firstName, username); err != nil {
-				return err
-			}
-		} else if twitter {
-			fmt.Println("Run Twitter")
-			if err := runTwitterCheck(email, firstName, username); err != nil {
+		}
+		if github {
+			if err := runGithubCheck(email, firstName, username); err != nil {
 				return err
 			}
 		}
@@ -137,11 +153,6 @@ var db *sql.DB
 func init() {
 
 	// Setenv here
-	***REMOVED***("SENTRY_DSN", "***REMOVED***")
-	***REMOVED***("SERVER_PASSWORD", "***REMOVED***")
-	***REMOVED***("DB_PASSWORD", "***REMOVED***")
-	***REMOVED***("DB_HOST", "***REMOVED***")
-	***REMOVED***("PORT", "***REMOVED***")
 
 	const (
 		port   = 5432
