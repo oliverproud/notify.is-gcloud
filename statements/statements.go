@@ -13,4 +13,10 @@ const (
   SET twitter = false, timestamp = (now() at time zone 'utc')
   WHERE id = $1;
   `
+	// GithubUpdateStatement updates the github column and timestamp if a username is available
+	GithubUpdateStatement = `
+  UPDATE users
+  SET github = false, timestamp = (now() at time zone 'utc')
+  WHERE id = $1;
+  `
 )
