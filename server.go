@@ -89,7 +89,7 @@ func runGithubCheck(email, firstName, username string) error {
 func runCheck() error {
 	log.Println("Starting check...")
 
-	selectStatement := `SELECT id, first_name, email, username, instagram, twitter, timestamp FROM users WHERE EXTRACT(EPOCH FROM ((now() at time zone 'utc') - timestamp)) > 43200.0`
+	selectStatement := `SELECT id, first_name, email, username, instagram, twitter, github, timestamp FROM users WHERE EXTRACT(EPOCH FROM ((now() at time zone 'utc') - timestamp)) > 43200.0`
 
 	rows, err := database.SelectRecords(db, selectStatement)
 	if err != nil {
