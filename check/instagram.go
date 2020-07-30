@@ -27,7 +27,7 @@ type XHRResponse struct {
 var InstagramAvailable bool
 var parseXHR XHRResponse
 
-// Instagram runs the headless browser than checks Instagram
+// Instagram runs the headless browser that checks Instagram
 func Instagram(email, name, username string) error {
 
 	// create context
