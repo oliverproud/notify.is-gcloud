@@ -12,6 +12,7 @@ var available bool
 
 // Twitter uses a Go Twitter API to make requests
 func Twitter(username string) (bool, error) {
+	// Oauth1 required to access Twitter API
 	config := oauth1.NewConfig(os.Getenv("CONSUMER_KEY"), os.Getenv("CONSUMER_SECRET"))
 	token := oauth1.NewToken(os.Getenv("TOKEN"), os.Getenv("TOKEN_SECRET"))
 	httpClient := config.Client(oauth1.NoContext, token)
@@ -20,6 +21,7 @@ func Twitter(username string) (bool, error) {
 
 	showParams := &twitter.UserShowParams{ScreenName: username}
 
+	// Get Twitter user
 	user, _, err := client.Users.Show(showParams)
 	if err != nil {
 		if err.Error() == "twitter: 50 User not found." {

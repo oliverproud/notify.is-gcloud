@@ -13,9 +13,10 @@ import (
 	"notify.is-go/sendgrid"
 	"notify.is-go/statements"
 	"notify.is-go/timeDiff"
-	//Postgres driver
+
 	"github.com/getsentry/sentry-go"
 	sentryhttp "github.com/getsentry/sentry-go/http"
+	//Postgres driver
 	_ "github.com/lib/pq"
 )
 
@@ -24,6 +25,7 @@ var timestamp time.Time
 var instagram, twitter, github bool
 var firstName, email, username, updateStatement string
 
+// Checks Instagram, sends email, updates database
 func runInstagramCheck(email, firstName, username string) error {
 	if err := check.Instagram(email, firstName, username); err != nil {
 		return err
@@ -43,6 +45,7 @@ func runInstagramCheck(email, firstName, username string) error {
 	return nil
 }
 
+// Checks Twitter, sends email, updates database
 func runTwitterCheck(email, firstName, username string) error {
 	twitterAvailable, err := check.Twitter(username)
 	if err != nil {
@@ -64,6 +67,7 @@ func runTwitterCheck(email, firstName, username string) error {
 	return nil
 }
 
+// Checks GitHub, sends email, updates database
 func runGithubCheck(email, firstName, username string) error {
 
 	githubAvailable, err := check.Github(username)
@@ -86,6 +90,7 @@ func runGithubCheck(email, firstName, username string) error {
 	return nil
 }
 
+// Selects records from database runs checks on them
 func runCheck() error {
 	log.Println("Starting check...")
 
@@ -130,6 +135,7 @@ func runCheck() error {
 	return nil
 }
 
+// hanlder gets run every time a Google Cloud CRON Job makes a get request
 func handler(w http.ResponseWriter, r *http.Request) {
 
 	keys, ok := r.URL.Query()["auth"]
@@ -165,8 +171,8 @@ func init() {
 
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=require", host, port, user, password, dbName)
 
-	var err error
-	db, err = sql.Open("postgres", psqlInfo)
+	// Open database connection
+	db, err := sql.Open("postgres", psqlInfo)
 	if err != nil {
 		sentry.CaptureException(err)
 		fmt.Printf("%v", err)

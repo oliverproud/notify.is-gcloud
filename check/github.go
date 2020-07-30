@@ -17,6 +17,7 @@ func Github(username string) (bool, error) {
 
 	ctx := context.Background()
 
+	// Get GitHub user
 	user, _, err := client.Users.Get(ctx, username)
 	if err != nil {
 		switch {

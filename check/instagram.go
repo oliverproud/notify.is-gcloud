@@ -12,8 +12,8 @@ import (
 	"github.com/chromedp/chromedp"
 )
 
-// XHRResponse handles the XHR JSON data coming in from Instagram
-type XHRResponse struct {
+// InstagramResponse handles the XHR JSON data coming in from Instagram
+type InstagramResponse struct {
 	AccountCreated bool `json:"account_created"`
 	Errors         struct {
 		Username []struct {
@@ -25,7 +25,7 @@ type XHRResponse struct {
 
 // InstagramAvailable let's the main package know if a username is available
 var InstagramAvailable bool
-var parseXHR XHRResponse
+var parseInstagramResponse InstagramResponse
 
 // Instagram runs the headless browser that checks Instagram
 func Instagram(email, name, username string) error {
@@ -38,7 +38,7 @@ func Instagram(email, name, username string) error {
 	if err != nil {
 		return err
 	}
-	// run task list
+	// run task
 	if err = chromedp.Run(ctx, task); err != nil {
 		return err
 	}
@@ -50,12 +50,13 @@ func submit(ctx context.Context, urlstr, selector, email, name, username string)
 	chromedp.ListenTarget(ctx, func(event interface{}) {
 		if event, ok := event.(*network.EventResponseReceived); ok {
 
+			// Ignore non XHR responses
 			if event.Type != "XHR" {
 				return
 			}
 
 			go func() {
-				// print response body
+				// Get response body
 				c := chromedp.FromContext(ctx)
 				rbp := network.GetResponseBody(event.RequestID)
 				body, err := rbp.Do(cdp.WithExecutor(ctx, c.Target))
@@ -67,12 +68,9 @@ func submit(ctx context.Context, urlstr, selector, email, name, username string)
 				// Check XHR response body for correct data
 				if strings.HasPrefix(string(body), `{"account_created"`) {
 
-					// Testing
-					//fmt.Println("BODY:", string(body))
-
 					// Parse JSON data
-					json.Unmarshal([]byte(body), &parseXHR)
-					if parseXHR.Errors.Username != nil {
+					json.Unmarshal([]byte(body), &parseInstagramResponse)
+					if parseInstagramResponse.Errors.Username != nil {
 						fmt.Printf("Instagram: username %s is NOT available\n", username)
 						InstagramAvailable = false
 					} else {
