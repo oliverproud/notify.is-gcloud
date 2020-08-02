@@ -164,8 +164,6 @@ var db *sql.DB
 
 func init() {
 
-	// Setenv here
-
 	const (
 		port   = 5432
 		user   = "postgres"
