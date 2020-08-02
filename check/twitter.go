@@ -29,6 +29,9 @@ func Twitter(username string) (bool, error) {
 		case strings.Contains(err.Error(), "twitter: 50 User not found."):
 			available = true
 			fmt.Printf("Twitter: username %s available\n", username)
+		case strings.Contains(err.Error(), "twitter: 63 User has been suspended."):
+			available = false
+			fmt.Printf("Twitter: username %s is suspended\n", username)
 		default:
 			return available, err
 		}
