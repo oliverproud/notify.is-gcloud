@@ -19,4 +19,10 @@ const (
   SET github = false, timestamp = (now() at time zone 'utc')
   WHERE id = $1;
   `
+	// DefaultUpdateStatement updates the github column and timestamp if a username is available
+	DefaultUpdateStatement = `
+  UPDATE users
+  SET timestamp = (now() at time zone 'utc')
+  WHERE id = $1;
+  `
 )

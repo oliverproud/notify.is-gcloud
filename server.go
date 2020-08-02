@@ -128,6 +128,12 @@ func runCheck() error {
 		}
 	}
 
+	numUpdated, err := database.UpdateRecords(db, statements.DefaultUpdateStatement, id)
+	if err != nil {
+		return err
+	}
+	fmt.Println("Default timestamp update:", numUpdated)
+
 	// Get any error encountered during iteration
 	if err = rows.Err(); err != nil {
 		return err
