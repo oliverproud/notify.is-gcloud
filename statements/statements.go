@@ -25,4 +25,11 @@ const (
   SET timestamp = (now() at time zone 'utc')
   WHERE id = $1;
   `
+
+	// SelectStatement retrieves records that haven't been checked for over 12 hours
+	SelectStatement = `
+	SELECT id, first_name, email, username, instagram, twitter, github, timestamp
+	FROM users
+	WHERE EXTRACT(EPOCH FROM ((now() at time zone 'utc') - timestamp)) > 43200.0;
+	`
 )
