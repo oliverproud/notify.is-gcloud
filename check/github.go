@@ -17,11 +17,6 @@ func Github(username string) (bool, error) {
 
 	ctx := context.Background()
 
-	// Very temporary GitHub username validation
-	if strings.ContainsAny(username, "_!@£#$%^&*()+`~/?><|{}[]`") {
-		fmt.Println("Invalid GitHub username")
-		return false, nil
-	}
 	// Get GitHub user
 	user, _, err := client.Users.Get(ctx, username)
 	if err != nil {
