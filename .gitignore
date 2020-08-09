@@ -25,6 +25,7 @@ web/.next/
 /logo
 /sendgrid-test
 instagram-test.go
+instagram-old.go
 
 # debug
 npm-debug.log*
