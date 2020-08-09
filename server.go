@@ -27,10 +27,12 @@ var firstName, email, username, updateStatement string
 
 // Checks Instagram, sends email, updates database
 func runInstagramCheck(email, firstName, username string) error {
-	if err := check.Instagram(email, firstName, username); err != nil {
+	instagramAvailable, err := check.Instagram(username)
+	if err != nil {
 		return err
 	}
-	if check.InstagramAvailable {
+
+	if instagramAvailable {
 		resp, err := sendgrid.SuccessEmailInstagram(email, firstName, username)
 		if err != nil {
 			return err
