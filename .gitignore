@@ -24,6 +24,7 @@ web/.next/
 /gocraft-work
 /logo
 /sendgrid-test
+instagram-test.go
 
 # debug
 npm-debug.log*
