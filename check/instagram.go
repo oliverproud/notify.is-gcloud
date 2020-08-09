@@ -28,13 +28,13 @@ var InstagramAvailable bool
 var parseInstagramResponse InstagramResponse
 
 // Instagram runs the headless browser that checks Instagram
-func Instagram(email, name, username string) error {
+func Instagram(username string) error {
 
 	// create context
 	ctx, cancel := chromedp.NewContext(context.Background())
 	defer cancel()
 
-	task, err := submit(ctx, `https://www.instagram.com/accounts/emailsignup/`, `//input[@name="username"]`, email, name, username)
+	task, err := submit(ctx, `https://www.instagram.com/accounts/emailsignup/`, `//input[@name="username"]`, username)
 	if err != nil {
 		return err
 	}
@@ -45,7 +45,7 @@ func Instagram(email, name, username string) error {
 	return nil
 }
 
-func submit(ctx context.Context, urlstr, selector, email, name, username string) (chromedp.Tasks, error) {
+func submit(ctx context.Context, urlstr, selector, username string) (chromedp.Tasks, error) {
 
 	chromedp.ListenTarget(ctx, func(event interface{}) {
 		if event, ok := event.(*network.EventResponseReceived); ok {
