@@ -109,7 +109,7 @@ func runCheck() error {
 		}
 
 		timeDiff.CalculateDiff(timestamp)
-		fmt.Println("Username:", username)
+		fmt.Println("Checking username:", username)
 
 		if instagram {
 			if err := runInstagramCheck(email, firstName, username); err != nil {

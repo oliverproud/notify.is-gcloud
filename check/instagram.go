@@ -37,8 +37,8 @@ func Instagram(username string) (bool, error) {
 	}
 
 	if len(nodes) != 0 {
-		fmt.Printf("RESULT: %v\n", nodes[0])
-		fmt.Println("Sprite Type:", nodes[0].Attributes)
+		// fmt.Printf("RESULT: %v\n", nodes[0])
+		// fmt.Println("Sprite Type:", nodes[0].Attributes)
 		for i := range nodes[0].Attributes {
 			if strings.Contains(nodes[0].Attributes[i], "coreSpriteInputAccepted") {
 				instagramAvailable = true
@@ -49,7 +49,7 @@ func Instagram(username string) (bool, error) {
 			}
 		}
 	} else {
-		fmt.Println("Nothing returned")
+		fmt.Println("Warning: no sprites returned")
 	}
 
 	return instagramAvailable, nil
