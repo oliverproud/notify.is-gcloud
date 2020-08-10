@@ -30,6 +30,6 @@ const (
 	SelectStatement = `
 	SELECT id, first_name, email, username, instagram, twitter, github, timestamp
 	FROM users
-	WHERE EXTRACT(EPOCH FROM ((now() at time zone 'utc') - timestamp)) > 43200.0;
+	WHERE EXTRACT(EPOCH FROM ((now() at time zone 'utc') - timestamp)) > 43000.0;
 	`
 )
