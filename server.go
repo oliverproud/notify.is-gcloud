@@ -108,7 +108,7 @@ func runCheck() error {
 			return err
 		}
 
-		fmt.Println("Checking username:", username)
+		fmt.Printf("\nChecking username: %s\n", username)
 		timeDiff.CalculateDiff(timestamp)
 
 		if instagram {
