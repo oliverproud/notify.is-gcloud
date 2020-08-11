@@ -38,7 +38,7 @@ func Twitter(username string) (bool, error) {
 	}
 
 	if user.ID != 0 {
-		fmt.Printf("Twitter: username %s NOT available: ID %d\n", username, user.ID)
+		fmt.Printf("Twitter: username %s is NOT available: ID %d\n", username, user.ID)
 		available = false
 	}
 	return available, nil
