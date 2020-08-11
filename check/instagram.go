@@ -49,7 +49,7 @@ func Instagram(username string) (bool, error) {
 			}
 		}
 	} else {
-		fmt.Println("Warning: no sprites returned")
+		return instagramAvailable, fmt.Errorf("No sprites returned")
 	}
 
 	return instagramAvailable, nil
