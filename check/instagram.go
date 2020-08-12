@@ -59,15 +59,15 @@ func submit(urlstr, selector, username string) (chromedp.Tasks, error) {
 
 	return chromedp.Tasks{
 		chromedp.Navigate(urlstr),
-		// chromedp.Sleep(time.Second),
-		chromedp.WaitVisible(selector),
+		chromedp.Sleep(time.Second),
+		// chromedp.WaitVisible(selector),
 		chromedp.SendKeys(selector, username),
-		// chromedp.Sleep(time.Second),
-		chromedp.WaitVisible(`//*[@id="react-root"]/section/main/div`),
+		chromedp.Sleep(time.Second),
+		// chromedp.WaitVisible(`//*[@id="react-root"]/section/main/div`),
 		// chromedp.Click(`//*[@id="react-root"]/section/main/div/article/div/div[1]/div/form/div[7]/div/button`, chromedp.BySearch),
 		chromedp.Click(`//*[@id="react-root"]/section/main/div`, chromedp.BySearch),
-		// chromedp.Sleep(time.Second),
-		chromedp.WaitVisible(`//*[@id="react-root"]/section/main/div/article/div/div[1]/div/form/div[5]/div/div/span`),
+		chromedp.Sleep(time.Second),
+		// chromedp.WaitVisible(`//*[@id="react-root"]/section/main/div/article/div/div[1]/div/form/div[5]/div/div/span`),
 		chromedp.Nodes(`//*[@id="react-root"]/section/main/div/article/div/div[1]/div/form/div[5]/div/div/span`, &nodes, chromedp.AtLeast(0)),
 	}, nil
 }
