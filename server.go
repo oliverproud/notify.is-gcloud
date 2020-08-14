@@ -12,7 +12,6 @@ import (
 	"notify.is-go/database"
 	"notify.is-go/sendgrid"
 	"notify.is-go/statements"
-	"notify.is-go/timeDiff"
 
 	"github.com/getsentry/sentry-go"
 	sentryhttp "github.com/getsentry/sentry-go/http"
@@ -109,7 +108,7 @@ func runCheck() error {
 		}
 
 		fmt.Printf("\nChecking username: %s\n", username)
-		timeDiff.CalculateDiff(timestamp)
+		fmt.Printf("Time since last check: %v\n", time.Since(timestamp))
 
 		if instagram {
 			if err := runInstagramCheck(email, firstName, username); err != nil {
