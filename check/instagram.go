@@ -19,7 +19,7 @@ var nodes []*cdp.Node
 func Instagram(username string) (bool, error) {
 
 	// create chrome instance
-	ctx, cancel := chromedp.NewContext(context.Background(), chromedp.WithDebugf(log.Printf))
+	ctx, cancel := chromedp.NewContext(context.Background(), chromedp.WithLogf(log.Printf))
 	defer cancel()
 
 	// create a timeout
