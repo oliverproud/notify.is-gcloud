@@ -19,7 +19,7 @@ var nodes []*cdp.Node
 func Instagram(username string) (bool, error) {
 
 	// create chrome instance
-	ctx, cancel := chromedp.NewContext(context.Background(), chromedp.WithLogf(log.Printf))
+	ctx, cancel := chromedp.NewContext(context.Background(), chromedp.WithDebugf(log.Printf))
 	defer cancel()
 
 	// create a timeout
@@ -59,17 +59,31 @@ func submit(urlstr, selector, username string) (chromedp.Tasks, error) {
 
 	return chromedp.Tasks{
 		chromedp.Navigate(urlstr),
-		chromedp.Sleep(time.Second),
 		chromedp.WaitVisible(selector),
 		chromedp.SendKeys(selector, username),
-		// chromedp.Sleep(time.Second),
-		// chromedp.WaitVisible(`//*[@id="react-root"]/section/main/div`),
-		// chromedp.Click(`//*[@id="react-root"]/section/main/div`, chromedp.BySearch),
-		chromedp.Sleep(time.Second),
-		chromedp.WaitVisible(`//*[@id="react-root"]/section/main/div/article/div/div[1]/div/form/div[7]/div/button`),
-		chromedp.Click(`//*[@id="react-root"]/section/main/div/article/div/div[1]/div/form/div[7]/div/button`, chromedp.BySearch),
-		chromedp.Sleep(time.Second),
-		chromedp.WaitVisible(`//*[@id="react-root"]/section/main/div/article/div/div[1]/div/form/div[5]/div/div/span`),
-		chromedp.Nodes(`//*[@id="react-root"]/section/main/div/article/div/div[1]/div/form/div[5]/div/div/span`, &nodes, chromedp.AtLeast(0)),
+
+		// Original method of waiting for element and then clicking, XPath BySearch (Hangs)
+		// chromedp.WaitVisible(`//*[@id="react-root"]/section/main/div/article/div/div[1]/div/form/div[7]/div/button`),
+		// chromedp.Click(`//*[@id="react-root"]/section/main/div/article/div/div[1]/div/form/div[7]/div/button`, chromedp.BySearch),
+
+		// Second method of waiting for element and then clicking, CSS selector adnd ByQuery (Hangs)
+		// chromedp.WaitVisible(`#react-root > section > main > div > article > div > div:nth-child(1) > div > form > div:nth-child(8) > div > button`, chromedp.ByQuery),
+		// chromedp.Click(`#react-root > section > main > div > article > div > div:nth-child(1) > div > form > div:nth-child(8) > div > button`, chromedp.ByQuery),
+
+		// Third method of waiting for element and then clicking, XPath BySearch just looking for Body (Working)
+		chromedp.WaitVisible(`/html/body`),
+		chromedp.Click(`/html/body`),
+
+		// Original method of checking for span using relative XPath (Hangs)
+		// chromedp.WaitVisible(`//*[@id="react-root"]/section/main/div/article/div/div[1]/div/form/div[5]/div/div/span`),
+		// chromedp.Nodes(`//*[@id="react-root"]/section/main/div/article/div/div[1]/div/form/div[5]/div/div/span`, &nodes, chromedp.AtLeast(0)),
+
+		// Second method of checking for span using full XPath (Hangs)
+		// chromedp.WaitVisible(`/html/body/div[1]/section/main/div/article/div/div[1]/div/form/div[5]/div/div/span`),
+		// chromedp.Nodes(`/html/body/div[1]/section/main/div/article/div/div[1]/div/form/div[5]/div/div/span`, &nodes, chromedp.AtLeast(0)),
+
+		// Third method of checking for span using XPath with 'contains' function looking for class
+		chromedp.WaitVisible(`//span[contains(@class,'gBp1f')]`),
+		chromedp.Nodes(`//span[contains(@class,'gBp1f')]`, &nodes, chromedp.AtLeast(0)),
 	}, nil
 }
