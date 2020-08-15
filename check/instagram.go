@@ -15,6 +15,13 @@ import (
 var instagramAvailable bool
 var nodes []*cdp.Node
 
+const (
+	urlStr           = `https://www.instagram.com/accounts/emailsignup/`
+	usernameSelector = `//input[@name="username"]`
+	bodySelector     = `/html/body`
+	spriteSelector   = `//span[contains(@class,'gBp1f')]`
+)
+
 // Instagram runs the headless browser that checks Instagram
 func Instagram(username string) (bool, error) {
 
@@ -26,7 +33,7 @@ func Instagram(username string) (bool, error) {
 	ctx, cancel = context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
-	task, err := submit(`https://www.instagram.com/accounts/emailsignup/`, `//input[@name="username"]`, username)
+	task, err := submit(urlStr, usernameSelector, bodySelector, spriteSelector, username)
 	if err != nil {
 		return instagramAvailable, err
 	}
@@ -37,8 +44,6 @@ func Instagram(username string) (bool, error) {
 	}
 
 	if len(nodes) != 0 {
-		// fmt.Printf("RESULT: %v\n", nodes[0])
-		// fmt.Println("Sprite Type:", nodes[0].Attributes)
 		for i := range nodes[0].Attributes {
 			if strings.Contains(nodes[0].Attributes[i], "coreSpriteInputAccepted") {
 				instagramAvailable = true
@@ -55,35 +60,17 @@ func Instagram(username string) (bool, error) {
 	return instagramAvailable, nil
 }
 
-func submit(urlstr, selector, username string) (chromedp.Tasks, error) {
+func submit(urlStr, usernameSelector, bodySelector, spriteSelector, username string) (chromedp.Tasks, error) {
 
 	return chromedp.Tasks{
-		chromedp.Navigate(urlstr),
-		chromedp.WaitVisible(selector),
-		chromedp.SendKeys(selector, username),
-
-		// Original method of waiting for element and then clicking, XPath BySearch (Hangs)
-		// chromedp.WaitVisible(`//*[@id="react-root"]/section/main/div/article/div/div[1]/div/form/div[7]/div/button`),
-		// chromedp.Click(`//*[@id="react-root"]/section/main/div/article/div/div[1]/div/form/div[7]/div/button`, chromedp.BySearch),
-
-		// Second method of waiting for element and then clicking, CSS selector adnd ByQuery (Hangs)
-		// chromedp.WaitVisible(`#react-root > section > main > div > article > div > div:nth-child(1) > div > form > div:nth-child(8) > div > button`, chromedp.ByQuery),
-		// chromedp.Click(`#react-root > section > main > div > article > div > div:nth-child(1) > div > form > div:nth-child(8) > div > button`, chromedp.ByQuery),
-
-		// Third method of waiting for element and then clicking, XPath BySearch just looking for Body (Working)
-		chromedp.WaitVisible(`/html/body`),
-		chromedp.Click(`/html/body`),
-
-		// Original method of checking for span using relative XPath (Hangs)
-		// chromedp.WaitVisible(`//*[@id="react-root"]/section/main/div/article/div/div[1]/div/form/div[5]/div/div/span`),
-		// chromedp.Nodes(`//*[@id="react-root"]/section/main/div/article/div/div[1]/div/form/div[5]/div/div/span`, &nodes, chromedp.AtLeast(0)),
-
-		// Second method of checking for span using full XPath (Hangs)
-		// chromedp.WaitVisible(`/html/body/div[1]/section/main/div/article/div/div[1]/div/form/div[5]/div/div/span`),
-		// chromedp.Nodes(`/html/body/div[1]/section/main/div/article/div/div[1]/div/form/div[5]/div/div/span`, &nodes, chromedp.AtLeast(0)),
-
-		// Third method of checking for span using XPath with 'contains' function looking for class
-		chromedp.WaitVisible(`//span[contains(@class,'gBp1f')]`),
-		chromedp.Nodes(`//span[contains(@class,'gBp1f')]`, &nodes, chromedp.AtLeast(0)),
+		chromedp.Navigate(urlStr),
+		chromedp.WaitVisible(usernameSelector),
+		chromedp.SendKeys(usernameSelector, username),
+		// XPath BySearch just looking for Body
+		chromedp.WaitVisible(bodySelector),
+		chromedp.Click(bodySelector),
+		// XPath with 'contains' function looking for class
+		chromedp.WaitVisible(spriteSelector),
+		chromedp.Nodes(spriteSelector, &nodes, chromedp.AtLeast(0)),
 	}, nil
 }
