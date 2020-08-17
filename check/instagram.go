@@ -18,7 +18,7 @@ var nodes []*cdp.Node
 const (
 	urlStr           = `https://www.instagram.com/accounts/emailsignup/`
 	usernameSelector = `//input[@name="username"]`
-	bodySelector     = `//div[contains(@class,'tbpKJ')]`
+	bodySelector     = `/html/body`
 	spriteSelector   = `//span[contains(@class,'gBp1f')]`
 )
 
