@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
@@ -9,23 +8,25 @@ import (
 	"time"
 
 	"notify.is-go/check"
-	"notify.is-go/database"
 	"notify.is-go/sendgrid"
-	"notify.is-go/statements"
 
 	"github.com/getsentry/sentry-go"
 	sentryhttp "github.com/getsentry/sentry-go/http"
-	//Postgres driver
-	_ "github.com/lib/pq"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
-var id []uint8
-var timestamp time.Time
-var instagram, twitter, github bool
-var firstName, email, username, updateStatement string
+// User database struct
+type User struct {
+	gorm.Model
+	Instagram, Twitter, Github bool
+	FirstName, Email, Username string
+	ID                         string    `gorm:"default:uuid_generate_v4()"`
+	Timestamp                  time.Time `gorm:"default:timezone('utc'::text, now())"`
+}
 
 // Checks Instagram, sends email, updates database
-func runInstagramCheck(email, firstName, username string) error {
+func runInstagramCheck(email, firstName, username, id string) error {
 	instagramAvailable, err := check.Instagram(username)
 	if err != nil {
 		return err
@@ -36,18 +37,18 @@ func runInstagramCheck(email, firstName, username string) error {
 		if err != nil {
 			return err
 		}
-		numUpdated, err := database.UpdateRecords(db, statements.InstagramUpdateStatement, id)
-		if err != nil {
-			return err
-		}
+
+		var user User
+		user.ID = id
+		result := db.Model(&user).Updates(&User{Instagram: false, Timestamp: time.Now()})
 		fmt.Println("Sendgrid Response:", resp.StatusCode)
-		fmt.Println("Number of records updated:", numUpdated)
+		fmt.Println("Number of records updated:", result.RowsAffected)
 	}
 	return nil
 }
 
 // Checks Twitter, sends email, updates database
-func runTwitterCheck(email, firstName, username string) error {
+func runTwitterCheck(email, firstName, username, id string) error {
 	twitterAvailable, err := check.Twitter(username)
 	if err != nil {
 		return err
@@ -58,18 +59,18 @@ func runTwitterCheck(email, firstName, username string) error {
 		if err != nil {
 			return err
 		}
-		numUpdated, err := database.UpdateRecords(db, statements.TwitterUpdateStatement, id)
-		if err != nil {
-			return err
-		}
+
+		var user User
+		user.ID = id
+		result := db.Model(&user).Updates(&User{Twitter: false, Timestamp: time.Now()})
 		fmt.Println("Sendgrid Response:", resp.StatusCode)
-		fmt.Println("Number of records updated:", numUpdated)
+		fmt.Println("Number of records updated:", result.RowsAffected)
 	}
 	return nil
 }
 
 // Checks GitHub, sends email, updates database
-func runGithubCheck(email, firstName, username string) error {
+func runGithubCheck(email, firstName, username, id string) error {
 
 	githubAvailable, err := check.Github(username)
 	if err != nil {
@@ -81,12 +82,12 @@ func runGithubCheck(email, firstName, username string) error {
 		if err != nil {
 			return err
 		}
-		numUpdated, err := database.UpdateRecords(db, statements.GithubUpdateStatement, id)
-		if err != nil {
-			return err
-		}
+
+		var user User
+		user.ID = id
+		result := db.Model(&user).Updates(&User{Github: false, Timestamp: time.Now()})
 		fmt.Println("Sendgrid Response:", resp.StatusCode)
-		fmt.Println("Number of records updated:", numUpdated)
+		fmt.Println("Number of records updated:", result.RowsAffected)
 	}
 	return nil
 }
@@ -95,41 +96,40 @@ func runGithubCheck(email, firstName, username string) error {
 func runCheck() error {
 	log.Println("Starting check...")
 
-	rows, err := database.SelectRecords(db, statements.SelectStatement)
+	rows, err := db.Model(&User{}).Where("EXTRACT(EPOCH FROM ((now() at time zone 'utc') - timestamp)) > 43200").Rows()
 	if err != nil {
 		return err
 	}
 
 	defer rows.Close()
+
 	for rows.Next() {
+		var user User
+		// ScanRows is a method of `gorm.DB`, it can be used to scan a row into a struct
+		db.ScanRows(rows, &user)
 
-		if err = rows.Scan(&id, &firstName, &email, &username, &instagram, &twitter, &github, &timestamp); err != nil {
-			return err
-		}
+		fmt.Printf("\nChecking username: %s\n", user.Username)
+		fmt.Printf("Time since last check: %v\n", time.Since(user.Timestamp))
 
-		fmt.Printf("\nChecking username: %s\n", username)
-		fmt.Printf("Time since last check: %v\n", time.Since(timestamp))
-
-		if instagram {
-			if err := runInstagramCheck(email, firstName, username); err != nil {
+		if user.Instagram {
+			if err := runInstagramCheck(user.Email, user.FirstName, user.Username, user.ID); err != nil {
 				return err
 			}
 		}
-		if twitter {
-			if err := runTwitterCheck(email, firstName, username); err != nil {
+		if user.Twitter {
+			if err := runTwitterCheck(user.Email, user.FirstName, user.Username, user.ID); err != nil {
 				return err
 			}
 		}
-		if github {
-			if err := runGithubCheck(email, firstName, username); err != nil {
+		if user.Github {
+			if err := runGithubCheck(user.Email, user.FirstName, user.Username, user.ID); err != nil {
 				return err
 			}
 		}
-		numUpdated, err := database.UpdateRecords(db, statements.DefaultUpdateStatement, id)
-		if err != nil {
-			return err
-		}
-		fmt.Println("Default timestamp update:", numUpdated)
+
+		// Default timestamp update
+		result := db.Model(&user).Updates(&User{Timestamp: time.Now()})
+		fmt.Println("Default timestamp update:", result.RowsAffected)
 	}
 
 	// Get any error encountered during iteration
@@ -158,34 +158,28 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-var db *sql.DB
+var db *gorm.DB
 
 func init() {
 
 	const (
 		port   = 5432
-		user   = "postgres"
+		dbUser = "postgres"
 		dbName = "notify"
 	)
 
 	var host = os.Getenv("DB_HOST")
 	var password = os.Getenv("DB_PASSWORD")
 
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=require", host, port, user, password, dbName)
+	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=require", host, port, dbUser, password, dbName)
 
 	// Open database connection
 	var err error
-	db, err = sql.Open("postgres", psqlInfo)
+	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		sentry.CaptureException(err)
-		fmt.Printf("%v", err)
-		fmt.Println("Returning...")
-		return
+		panic("failed to connect database")
 	}
-	if err = db.Ping(); err != nil {
-		sentry.CaptureException(err)
-		log.Fatal(err)
-	}
+
 }
 
 func main() {
