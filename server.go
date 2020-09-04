@@ -26,7 +26,7 @@ type User struct {
 }
 
 // Checks Instagram, sends email, updates database
-func runInstagramCheck(email, firstName, username, id string) error {
+func runInstagramCheck(email, firstName, username string, user User) error {
 	instagramAvailable, err := check.Instagram(username)
 	if err != nil {
 		return err
@@ -38,8 +38,6 @@ func runInstagramCheck(email, firstName, username, id string) error {
 			return err
 		}
 
-		var user User
-		user.ID = id
 		result := db.Model(&user).Updates(&User{Instagram: false, Timestamp: time.Now()})
 		fmt.Println("Sendgrid Response:", resp.StatusCode)
 		fmt.Println("Number of records updated:", result.RowsAffected)
@@ -48,7 +46,7 @@ func runInstagramCheck(email, firstName, username, id string) error {
 }
 
 // Checks Twitter, sends email, updates database
-func runTwitterCheck(email, firstName, username, id string) error {
+func runTwitterCheck(email, firstName, username string, user User) error {
 	twitterAvailable, err := check.Twitter(username)
 	if err != nil {
 		return err
@@ -60,8 +58,6 @@ func runTwitterCheck(email, firstName, username, id string) error {
 			return err
 		}
 
-		var user User
-		user.ID = id
 		result := db.Model(&user).Updates(&User{Twitter: false, Timestamp: time.Now()})
 		fmt.Println("Sendgrid Response:", resp.StatusCode)
 		fmt.Println("Number of records updated:", result.RowsAffected)
@@ -70,7 +66,7 @@ func runTwitterCheck(email, firstName, username, id string) error {
 }
 
 // Checks GitHub, sends email, updates database
-func runGithubCheck(email, firstName, username, id string) error {
+func runGithubCheck(email, firstName, username string, user User) error {
 
 	githubAvailable, err := check.Github(username)
 	if err != nil {
@@ -83,8 +79,6 @@ func runGithubCheck(email, firstName, username, id string) error {
 			return err
 		}
 
-		var user User
-		user.ID = id
 		result := db.Model(&user).Updates(&User{Github: false, Timestamp: time.Now()})
 		fmt.Println("Sendgrid Response:", resp.StatusCode)
 		fmt.Println("Number of records updated:", result.RowsAffected)
@@ -112,17 +106,17 @@ func runCheck() error {
 		fmt.Printf("Time since last check: %v\n", time.Since(user.Timestamp))
 
 		if user.Instagram {
-			if err := runInstagramCheck(user.Email, user.FirstName, user.Username, user.ID); err != nil {
+			if err := runInstagramCheck(user.Email, user.FirstName, user.Username, user); err != nil {
 				return err
 			}
 		}
 		if user.Twitter {
-			if err := runTwitterCheck(user.Email, user.FirstName, user.Username, user.ID); err != nil {
+			if err := runTwitterCheck(user.Email, user.FirstName, user.Username, user); err != nil {
 				return err
 			}
 		}
 		if user.Github {
-			if err := runGithubCheck(user.Email, user.FirstName, user.Username, user.ID); err != nil {
+			if err := runGithubCheck(user.Email, user.FirstName, user.Username, user); err != nil {
 				return err
 			}
 		}
