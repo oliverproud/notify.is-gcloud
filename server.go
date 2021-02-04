@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"notify.is-go/check"
-	"notify.is-go/sendgrid"
+	"notify.is-go/postmark"
 
 	"github.com/getsentry/sentry-go"
 	sentryhttp "github.com/getsentry/sentry-go/http"
@@ -33,13 +33,13 @@ func runInstagramCheck(email, firstName, username string, user User) error {
 	}
 
 	if instagramAvailable {
-		resp, err := sendgrid.SuccessEmailInstagram(email, firstName, username)
+		resp, err := postmark.SendSuccessEmail(email, firstName, username, "Instagram")
 		if err != nil {
 			return err
 		}
 
 		result := db.Model(&user).Updates(&User{Instagram: false, Timestamp: time.Now()})
-		fmt.Println("Sendgrid Response:", resp.StatusCode)
+		fmt.Printf("Postmark response: %v %s\n", resp.ErrorCode, resp.Message)
 		fmt.Println("Number of records updated:", result.RowsAffected)
 	}
 	return nil
@@ -53,13 +53,13 @@ func runTwitterCheck(email, firstName, username string, user User) error {
 	}
 
 	if twitterAvailable {
-		resp, err := sendgrid.SuccessEmailTwitter(email, firstName, username)
+		resp, err := postmark.SendSuccessEmail(email, firstName, username, "Twitter")
 		if err != nil {
 			return err
 		}
 
 		result := db.Model(&user).Updates(&User{Twitter: false, Timestamp: time.Now()})
-		fmt.Println("Sendgrid Response:", resp.StatusCode)
+		fmt.Printf("Postmark response: %v %s\n", resp.ErrorCode, resp.Message)
 		fmt.Println("Number of records updated:", result.RowsAffected)
 	}
 	return nil
@@ -74,13 +74,13 @@ func runGithubCheck(email, firstName, username string, user User) error {
 	}
 
 	if githubAvailable {
-		resp, err := sendgrid.SuccessEmailGithub(email, firstName, username)
+		resp, err := postmark.SendSuccessEmail(email, firstName, username, "GitHub")
 		if err != nil {
 			return err
 		}
 
 		result := db.Model(&user).Updates(&User{Github: false, Timestamp: time.Now()})
-		fmt.Println("Sendgrid Response:", resp.StatusCode)
+		fmt.Printf("Postmark response: %v %s\n", resp.ErrorCode, resp.Message)
 		fmt.Println("Number of records updated:", result.RowsAffected)
 	}
 	return nil
