@@ -15,6 +15,7 @@ require (
 	github.com/google/go-github v17.0.0+incompatible
 	github.com/hibiken/asynq v0.10.0
 	github.com/hibiken/asynq/tools v0.0.0-20200706125356-9bd3d8e19ec1 // indirect
+	github.com/keighl/postmark v0.0.0-20190821160221-28358b1a94e3
 	github.com/lib/pq v1.7.0
 	github.com/mitchellh/mapstructure v1.3.2 // indirect
 	github.com/pelletier/go-toml v1.8.0 // indirect
