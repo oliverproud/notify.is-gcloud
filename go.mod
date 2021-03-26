@@ -1,35 +1,26 @@
 module notify.is-go
 
-go 1.14
+go 1.16
 
 require (
-	github.com/chromedp/cdproto v0.0.0-20200709115526-d1f6fc58448b
-	github.com/chromedp/chromedp v0.5.3
-	github.com/dghubble/go-twitter v0.0.0-20190719072343-39e5462e111f
-	github.com/dghubble/oauth1 v0.6.0
-	github.com/fsnotify/fsnotify v1.4.9 // indirect
-	github.com/getsentry/sentry-go v0.7.0
-	github.com/go-redis/redis/v7 v7.4.0 // indirect
-	github.com/gocraft/work v0.5.1
-	github.com/gomodule/redigo v1.8.2
+	github.com/briandowns/spinner v1.12.0 // indirect
+	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
+	github.com/chromedp/cdproto v0.0.0-20210311013119-4e41b2544bc6
+	github.com/chromedp/chromedp v0.6.8
+	github.com/dghubble/go-twitter v0.0.0-20201011215211-4b180d0cc78d
+	github.com/dghubble/oauth1 v0.7.0
+	github.com/fatih/color v1.10.0
+	github.com/getsentry/sentry-go v0.10.0
 	github.com/google/go-github v17.0.0+incompatible
-	github.com/hibiken/asynq v0.10.0
-	github.com/hibiken/asynq/tools v0.0.0-20200706125356-9bd3d8e19ec1 // indirect
+	github.com/jackc/pgproto3/v2 v2.0.7 // indirect
 	github.com/keighl/postmark v0.0.0-20190821160221-28358b1a94e3
-	github.com/lib/pq v1.7.0
-	github.com/mitchellh/mapstructure v1.3.2 // indirect
-	github.com/pelletier/go-toml v1.8.0 // indirect
-	github.com/robfig/cron v1.2.0
-	github.com/sendgrid/rest v2.6.0+incompatible
-	github.com/sendgrid/sendgrid-go v3.6.0+incompatible
-	github.com/spf13/afero v1.3.2 // indirect
-	github.com/spf13/cobra v1.0.0 // indirect
-	github.com/spf13/viper v1.7.0 // indirect
-	golang.org/x/crypto v0.0.0-20200728195943-123391ffb6de // indirect
-	golang.org/x/sys v0.0.0-20200625212154-ddb9806d33ae // indirect
-	golang.org/x/text v0.3.3 // indirect
-	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e // indirect
-	gopkg.in/ini.v1 v1.57.0 // indirect
-	gorm.io/driver/postgres v1.0.0
-	gorm.io/gorm v1.20.0
+	github.com/lib/pq v1.7.0 // indirect
+	goji.io v2.0.2+incompatible // indirect
+	golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83 // indirect
+	golang.org/x/sys v0.0.0-20210309074719-68d13333faf2 // indirect
+	golang.org/x/text v0.3.5 // indirect
+	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
+	gopkg.in/yaml.v2 v2.3.0 // indirect
+	gorm.io/driver/postgres v1.0.8
+	gorm.io/gorm v1.21.3
 )
