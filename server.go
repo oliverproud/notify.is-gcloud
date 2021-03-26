@@ -2,18 +2,19 @@ package main
 
 import (
 	"fmt"
+	"github.com/fatih/color"
+	sentryhttp "github.com/getsentry/sentry-go/http"
 	"log"
+	"math/rand"
 	"net/http"
+	"notify.is-go/postmark"
 	"os"
 	"time"
 
-	"notify.is-go/check"
-	"notify.is-go/postmark"
-
 	"github.com/getsentry/sentry-go"
-	sentryhttp "github.com/getsentry/sentry-go/http"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"notify.is-go/check"
 )
 
 // User database struct
@@ -22,8 +23,10 @@ type User struct {
 	Instagram, Twitter, Github bool
 	FirstName, Email, Username string
 	ID                         string    `gorm:"default:uuid_generate_v4()"`
-	Timestamp                  time.Time `gorm:"default:timezone('utc'::text, now())"`
 }
+
+// Configure colorized outputs
+var warning = color.New(color.FgRed, color.Bold).SprintFunc()
 
 // Checks Instagram, sends email, updates database
 func runInstagramCheck(email, firstName, username string, user User) error {
@@ -33,14 +36,30 @@ func runInstagramCheck(email, firstName, username string, user User) error {
 	}
 
 	if instagramAvailable {
-		resp, err := postmark.SendSuccessEmail(email, firstName, username, "Instagram")
+
+		// returning any error will rollback changes
+		err := db.Transaction(func(tx *gorm.DB) error {
+
+			if err := tx.Model(&user).Updates(map[string]interface{}{"instagram": false}).Error; err != nil {
+				return err
+			}
+
+			resp, err := postmark.SendSuccessEmail(email, firstName, username, "Instagram")
+			if err != nil {
+				return err
+			}
+			if resp.ErrorCode != 0 {
+				return fmt.Errorf("Postmark error: %v %s\n", resp.ErrorCode, resp.Message)
+			}
+			fmt.Println("Number of records updated:", 1)
+			fmt.Printf("Postmark response: %v %s\n", resp.ErrorCode, resp.Message)
+
+			// returning nil will commit the whole transaction
+			return nil
+		})
 		if err != nil {
 			return err
 		}
-
-		result := db.Model(&user).Updates(&User{Instagram: false, Timestamp: time.Now()})
-		fmt.Printf("Postmark response: %v %s\n", resp.ErrorCode, resp.Message)
-		fmt.Println("Number of records updated:", result.RowsAffected)
 	}
 	return nil
 }
@@ -53,14 +72,28 @@ func runTwitterCheck(email, firstName, username string, user User) error {
 	}
 
 	if twitterAvailable {
-		resp, err := postmark.SendSuccessEmail(email, firstName, username, "Twitter")
+
+		err := db.Transaction(func(tx *gorm.DB) error {
+
+			if err := tx.Model(&user).Updates(map[string]interface{}{"twitter": false}).Error; err != nil {
+				return err
+			}
+
+			resp, err := postmark.SendSuccessEmail(email, firstName, username, "Twitter")
+			if err != nil {
+				return err
+			}
+			if resp.ErrorCode != 0 {
+				return fmt.Errorf("Postmark error: %v %s\n", resp.ErrorCode, resp.Message)
+			}
+			fmt.Println("Number of records updated:", 1)
+			fmt.Printf("Postmark response: %v %s\n", resp.ErrorCode, resp.Message)
+
+			return nil
+		})
 		if err != nil {
 			return err
 		}
-
-		result := db.Model(&user).Updates(&User{Twitter: false, Timestamp: time.Now()})
-		fmt.Printf("Postmark response: %v %s\n", resp.ErrorCode, resp.Message)
-		fmt.Println("Number of records updated:", result.RowsAffected)
 	}
 	return nil
 }
@@ -74,14 +107,28 @@ func runGithubCheck(email, firstName, username string, user User) error {
 	}
 
 	if githubAvailable {
-		resp, err := postmark.SendSuccessEmail(email, firstName, username, "GitHub")
+
+		err := db.Transaction(func(tx *gorm.DB) error {
+
+			if err := tx.Model(&user).Updates(map[string]interface{}{"github": false}).Error; err != nil {
+				return err
+			}
+
+			resp, err := postmark.SendSuccessEmail(email, firstName, username, "GitHub")
+			if err != nil {
+				return err
+			}
+			if resp.ErrorCode != 0 {
+				return fmt.Errorf("Postmark error: %v %s\n", resp.ErrorCode, resp.Message)
+			}
+			fmt.Println("Number of records updated:", 1)
+			fmt.Printf("Postmark response: %v %s\n", resp.ErrorCode, resp.Message)
+
+			return nil
+		})
 		if err != nil {
 			return err
 		}
-
-		result := db.Model(&user).Updates(&User{Github: false, Timestamp: time.Now()})
-		fmt.Printf("Postmark response: %v %s\n", resp.ErrorCode, resp.Message)
-		fmt.Println("Number of records updated:", result.RowsAffected)
 	}
 	return nil
 }
@@ -90,20 +137,23 @@ func runGithubCheck(email, firstName, username string, user User) error {
 func runCheck() error {
 	log.Println("Starting check...")
 
-	rows, err := db.Model(&User{}).Where("EXTRACT(EPOCH FROM ((now() at time zone 'utc') - timestamp)) > 43200").Rows()
+	// 43200 seconds == 12 hours
+	// 86400 seconds == 24 hours
+	rows, err := db.Model(&User{}).Where("EXTRACT(EPOCH FROM ((now() at time zone 'utc') - updated_at)) > 86400").Rows()
 	if err != nil {
 		return err
 	}
 
-	defer rows.Close()
-
 	for rows.Next() {
 		var user User
 		// ScanRows is a method of `gorm.DB`, it can be used to scan a row into a struct
-		db.ScanRows(rows, &user)
+		err := db.ScanRows(rows, &user)
+		if err != nil {
+			return err
+		}
 
 		fmt.Printf("\nChecking username: %s\n", user.Username)
-		fmt.Printf("Time since last check: %v\n", time.Since(user.Timestamp))
+		fmt.Printf("Time since last check: %v\n", time.Since(user.UpdatedAt))
 
 		if user.Instagram {
 			if err := runInstagramCheck(user.Email, user.FirstName, user.Username, user); err != nil {
@@ -121,9 +171,16 @@ func runCheck() error {
 			}
 		}
 
-		// Default timestamp update
-		result := db.Model(&user).Updates(&User{Timestamp: time.Now()})
-		fmt.Println("Default timestamp update:", result.RowsAffected)
+		// Update time user was last checked
+		result := db.Model(&user).Updates(&User{})
+		fmt.Println("Default timestamp update. Rows affected:", result.RowsAffected)
+
+		if user.Instagram {
+			// sleep after each Instagram check
+			sleepTime := rand.Intn(60 - 10) + 10
+			fmt.Printf("Sleeping for %d seconds after Instagram check\n", sleepTime)
+			time.Sleep(time.Duration(sleepTime) * time.Second)
+		}
 	}
 
 	// Get any error encountered during iteration
@@ -133,22 +190,30 @@ func runCheck() error {
 	return nil
 }
 
-// hanlder gets run every time a Google Cloud CRON Job makes a get request
+// handler gets run every time a Google Cloud CRON Job makes a get request
 func handler(w http.ResponseWriter, r *http.Request) {
 
-	keys, ok := r.URL.Query()["auth"]
-	if !ok || len(keys[0]) < 1 || keys[0] != os.Getenv("SERVER_PASSWORD") {
-		fmt.Fprintf(w, "You are not authorised to access this page")
-	} else {
-		log.Print("Notify.is: received a request")
+	switch r.Method {
+	case http.MethodGet:
+		keys, ok := r.URL.Query()["auth"]
+		if !ok || len(keys[0]) < 1 || keys[0] != os.Getenv("SERVER_PASSWORD") {
+			http.Error(w, "You are not authorised to access this page.", http.StatusUnauthorized)
+		} else {
+			log.Print("Notify.is: received a request")
 
-		if err := runCheck(); err != nil {
-			sentry.CaptureException(err)
-			fmt.Println(err)
-			fmt.Println("Returning...")
-			return
+			if err := runCheck(); err != nil {
+				sentry.CaptureException(err)
+				fmt.Println(warning(err))
+				fmt.Println("Returning...")
+				return
+			}
+			_, err := fmt.Fprintf(w, "Ready to process requests.\n")
+			if err != nil {
+				return
+			}
 		}
-		fmt.Fprintf(w, "Ready to process requests.\n")
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
 }
 
@@ -156,12 +221,9 @@ var db *gorm.DB
 
 func init() {
 
-	const (
-		port   = 5432
-		dbUser = "postgres"
-		dbName = "notify"
-	)
-
+	var port = 5432
+	var dbUser = os.Getenv("DB_USER")
+	var dbName = os.Getenv("DB_NAME")
 	var host = os.Getenv("DB_HOST")
 	var password = os.Getenv("DB_PASSWORD")
 
@@ -173,7 +235,6 @@ func init() {
 	if err != nil {
 		panic("failed to connect database")
 	}
-
 }
 
 func main() {
@@ -182,21 +243,16 @@ func main() {
 	if err := sentry.Init(sentry.ClientOptions{
 		Dsn: os.Getenv("SENTRY_DSN"),
 	}); err != nil {
-		fmt.Printf("Sentry initialization failed: %v\n", err)
+		fmt.Printf(warning("Sentry initialization failed: ") + "%v\n", err)
 	}
-
-	// Flush buffered events before the program terminates.
-	// Set the timeout to the maximum duration the program can afford to wait.
-	defer sentry.Flush(2 * time.Second)
 
 	// Create an instance of sentryhttp
 	sentryHandler := sentryhttp.New(sentryhttp.Options{})
 
-	log.Print("Notify.is: starting server...")
-
 	http.HandleFunc("/", sentryHandler.HandleFunc(handler))
 
-	log.Printf("Notify.is: listening on port %s", os.Getenv("PORT"))
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", os.Getenv("PORT")), nil))
+	log.Print("Notify.is: starting server...")
 
+	log.Printf("Notify.is: listening on port: %s", os.Getenv("PORT"))
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", os.Getenv("PORT")), nil))
 }
