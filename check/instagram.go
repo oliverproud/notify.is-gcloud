@@ -3,12 +3,11 @@ package check
 import (
 	"context"
 	"fmt"
+	"github.com/chromedp/cdproto/cdp"
+	"github.com/chromedp/chromedp"
 	"log"
 	"strings"
 	"time"
-
-	"github.com/chromedp/cdproto/cdp"
-	"github.com/chromedp/chromedp"
 )
 
 // instagramAvailable let's the main package know if a username is available
@@ -25,8 +24,17 @@ const (
 // Instagram runs the headless browser that checks Instagram
 func Instagram(username string) (bool, error) {
 
-	// create chrome instance
-	ctx, cancel := chromedp.NewContext(context.Background(), chromedp.WithLogf(log.Printf))
+	opts := append(chromedp.DefaultExecAllocatorOptions[:],
+		chromedp.Flag("headless", true),
+		chromedp.UserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 11_2_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36"),
+		chromedp.WindowSize(1920, 1080),
+	)
+
+	allocCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
+	defer cancel()
+
+	// also set up a custom logger
+	ctx, cancel := chromedp.NewContext(allocCtx, /*chromedp.WithDebugf(log.Printf),*/ chromedp.WithLogf(log.Printf))
 	defer cancel()
 
 	// create a timeout
@@ -47,14 +55,14 @@ func Instagram(username string) (bool, error) {
 		for i := range nodes[0].Attributes {
 			if strings.Contains(nodes[0].Attributes[i], "coreSpriteInputAccepted") {
 				instagramAvailable = true
-				fmt.Printf("Instagram: username %s is available\n", username)
+				fmt.Printf("Instagram: username %s is %s\n", username, success("AVAILABLE"))
 			} else if strings.Contains(nodes[0].Attributes[i], "coreSpriteInputError") {
 				instagramAvailable = false
-				fmt.Printf("Instagram: username %s is NOT available\n", username)
+				fmt.Printf("Instagram: username %s is %s\n", username, warning("NOT AVAILABLE"))
 			}
 		}
 	} else {
-		return instagramAvailable, fmt.Errorf("No sprites returned")
+		return instagramAvailable, fmt.Errorf("no sprites returned")
 	}
 
 	return instagramAvailable, nil

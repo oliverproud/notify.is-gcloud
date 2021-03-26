@@ -2,6 +2,7 @@ package check
 
 import (
 	"fmt"
+	"github.com/fatih/color"
 	"os"
 	"strings"
 
@@ -10,6 +11,9 @@ import (
 )
 
 var available bool
+// Configure colorized outputs
+var warning = color.New(color.FgRed, color.Bold).SprintFunc()
+var success = color.New(color.FgGreen, color.Bold).SprintFunc()
 
 // Twitter uses a Go Twitter API to make requests
 func Twitter(username string) (bool, error) {
@@ -22,23 +26,27 @@ func Twitter(username string) (bool, error) {
 
 	showParams := &twitter.UserShowParams{ScreenName: username}
 
+
+
 	// Get Twitter user
 	user, _, err := client.Users.Show(showParams)
 	if err != nil {
 		switch {
+		case strings.Contains(err.Error(), "twitter: 215 Bad Authentication data."):
+			return false, err
 		case strings.Contains(err.Error(), "twitter: 50 User not found."):
+			fmt.Printf("Twitter: username %s is %s\n", username, success("AVAILABLE"))
 			available = true
-			fmt.Printf("Twitter: username %s available\n", username)
 		case strings.Contains(err.Error(), "twitter: 63 User has been suspended."):
+			fmt.Printf("Twitter: username %s is %s\n", username, warning("SUSPENDED"))
 			available = false
-			fmt.Printf("Twitter: username %s is suspended\n", username)
 		default:
 			return available, err
 		}
 	}
 
 	if user.ID != 0 {
-		fmt.Printf("Twitter: username %s is NOT available: ID %d\n", username, user.ID)
+		fmt.Printf("Twitter: username %s is %s \n", username, warning("NOT AVAILABLE"))
 		available = false
 	}
 	return available, nil

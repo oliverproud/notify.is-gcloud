@@ -30,10 +30,10 @@ func Github(username string) (bool, error) {
 
 	if user != nil {
 		githubAvailable = false
-		fmt.Printf("GitHub: username %s is NOT available\n", username)
+		fmt.Printf("GitHub: username %s is %s\n", username, warning("NOT AVAILABLE"))
 	} else {
 		githubAvailable = true
-		fmt.Printf("GitHub: username %s is available\n", username)
+		fmt.Printf("GitHub: username %s is %s\n", username, success("AVAILABLE"))
 	}
 	return githubAvailable, nil
 }
